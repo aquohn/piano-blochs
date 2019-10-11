@@ -26,7 +26,7 @@ from sympy import pi
 
 import sys
 # replace the path with the path to Qiskit-for-GameDev folder on your computer
-sys.path.append('/Users/kirais/Documents/GitHub/Qiskit-for-GameDev/pygame/')
+sys.path.append(r'C:\Users\aquohn\Documents\Projects\Qiskit Hackathon\piano-blochs\pygame')
 
 import qgame
 
