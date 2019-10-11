@@ -21,8 +21,6 @@ from numpy import pi
 TURN_FRAMES = 6        
 SCREEN_WIDTH=800
 SCREEN_HEIGHT=600
-ARROW_COLOUR='red'
-BG_COLOR='white'
 
 class Arrow3D(FancyArrowPatch):
 
@@ -83,13 +81,6 @@ while running:
     ax.set_xlim3d(-1.3, 1.3)
     ax.set_ylim3d(-1.3, 1.3)
     ax.set_zlim3d(-1.3, 1.3)
-    span = np.linspace(-1.0, 1.0, 2)
-    ax.plot(span, 0 * span, zs=0, zdir='z', label='X',
-                   lw=SCREEN_WIDTH, color=BG_COLOUR)
-    ax.plot(0 * span, span, zs=0, zdir='z', label='Y',
-                   lw=SCREEN_WIDTH, color=BG_COLOUR)
-    ax.plot(0 * span, span, zs=0, zdir='y', label='Z',
-                   lw=SCREEN_WIDTH, color=BG_COLOUR)
     #ax.set_aspect("equal")
 
     # draw sphere
@@ -105,12 +96,12 @@ while running:
     x1 = [0,2*(np.real(sv_arr[0])*np.real(sv_arr[1])+np.imag(sv_arr[0])*np.imag(sv_arr[1]))]
     y1 = [0,2*(np.imag(sv_arr[0])*np.real(sv_arr[1])+np.real(sv_arr[0])*np.imag(sv_arr[1]))]
     a = Arrow3D(x1, y1, z1, mutation_scale=20,
-            lw=1, arrowstyle="-|>", color=ARROW_COLOR)
+            lw=1, arrowstyle="-|>", color='r')
     ax.add_artist(a)
-    plt.savefig('bloch.png')
+    plt.savefig('bloch.tiff')
     #     A = plot_bloch_multivector(statevector)
     #     A.savefig('bloch.png')
-    surf = pygame.image.load("bloch.png")
+    surf = pygame.image.load("bloch.tiff")
     screen.blit(surf,(0,0))
     pygame.display.flip()
     
