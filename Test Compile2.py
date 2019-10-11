@@ -1,30 +1,25 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Fri Oct 11 23:37:39 2019
+#!/usr/bin/env python
+# coding: utf-8
 
-@author: aquohn
-"""
+# In[2]:
+
 
 import pygame
 from pygame.locals import *
 from qiskit import *
 from qiskit.tools.visualization import plot_bloch_multivector
 from qiskit.quantum_info.states import Statevector
+
+
+# In[3]:
+
+
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import numpy as np
 from itertools import product, combinations
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
-from numpy import pi
-
-TURN_FRAMES = 4        
-B_FIELD = 0.01
-SCREEN_WIDTH=640
-SCREEN_HEIGHT=650
-X_COLOR = "green"
-Y_COLOR = "orange"
-Z_COLOR = "blue"
 
 class Arrow3D(FancyArrowPatch):
 
@@ -38,41 +33,46 @@ class Arrow3D(FancyArrowPatch):
         self.set_positions((xs[0], ys[0]), (xs[1], ys[1]))
         FancyArrowPatch.draw(self, renderer)
 
-pygame.init()
 
+# In[38]:
+
+
+SCREEN_WIDTH=640
+SCREEN_HEIGHT=650
 sv_arr = np.array([1,0])
 z1 = [0,1]
-circuit = QuantumCircuit(1,1) #1 qubit and 1 classical bit
+pygame.init()
+
 simulator = Aer.get_backend('statevector_simulator')
+
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 running = True
 
 clock = pygame.time.Clock()
-xcnt = 0
-ycnt = 0
-zcnt = 0
 
 while running:
     screen.fill((0, 0, 0))
     
     # Initialization
     circuit = QuantumCircuit(1,1) #1 qubit and 1 classical bit
-    sv_arr = np.array([sv_arr[0]+B_FIELD, sv_arr[1]])
+    sv_arr = np.array([sv_arr[0]+0.03, sv_arr[1]])
     sv_arr = sv_arr/((abs(sv_arr[0]))**2+(abs(sv_arr[1]))**2)**0.5
     circuit.initialize(sv_arr, 0)
-
-    circuit.u3(0,0,0.5,0)
+    
+    # Precession effect
+    circuit.u3(0,0,0.7,0)
+        
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
                 running = False
             elif event.key == K_a:
-                xcnt += TURN_FRAMES
+                circuit.x(0)
             elif event.key == K_s:
-                ycnt += TURN_FRAMES
+                circuit.y(0)
             elif event.key == K_d:
-                zcnt += TURN_FRAMES
+                circuit.z(0)
             elif event.key == K_RETURN:
                 circuit.measure([0],[0])
                 backend = Aer.get_backend('qasm_simulator')
@@ -82,47 +82,15 @@ while running:
                     sv_arr[int(key)] = 1
                     sv_arr[1-int(key)] = 0
                 # Check if statevector coincides with point here
- 
         elif event.type == QUIT:
             running = False
     
-    if xcnt > 0:
-        circuit.rx(pi / TURN_FRAMES, 0)
-        xcnt -= 1 
-    if ycnt > 0:
-        circuit.ry(pi / TURN_FRAMES, 0)
-        ycnt -= 1
-    if zcnt > 0:
-        circuit.rz(pi / TURN_FRAMES, 0)
-        zcnt -= 1
-    
-    fig = plt.figure(figsize=(10,10))
-    #ax = plt.gca(projection='3d')
-    ax = Axes3D(fig)
+    fig = plt.figure(figsize=(9,9))
+    ax = plt.gca(projection='3d')
     ax._axis3don = False
-    ax.set_xlim3d(-1.3, 1.3)
-    ax.set_ylim3d(-1.3, 1.3)
-    ax.set_zlim3d(-1.3, 1.3)
-    
-    # z-axis
-    ax.plot([0, 0], [0, 0], [-1.8, 1.8], color=Z_COLOR)
-    ax.text(0, 0, 1.8, " + z", color=Z_COLOR)
-    ax.text(0, 0, -1.8, " - z", color=Z_COLOR)
-    
-    # y-axis
-    ax.plot([0, 0], [-1.8, 1.8], [0, 0], color=Y_COLOR)
-    ax.text(0, 1.8, 0, " + y", color=Y_COLOR)
-    ax.text(0, -1.8, 0, " - y", color=Y_COLOR)
-    
-    # x-axis
-    ax.plot([-1.8, 1.8], [0, 0], [0, 0], color=X_COLOR)
-    ax.text(1.8, 0, 0, " + x", color=X_COLOR)
-    ax.text(-1.8, 0, 0, " - x", color=X_COLOR)
-    
-    #ax.set_aspect("equal")
 
     # draw sphere
-    u, v = np.mgrid[0:2*pi:50j, 0:pi:25j]
+    u, v = np.mgrid[0:2*np.pi:50j, 0:np.pi:25j]
     x = np.cos(u)*np.sin(v)
     y = np.sin(u)*np.sin(v)
     z = np.cos(v)
@@ -135,16 +103,37 @@ while running:
     y1 = [0,2*(np.imag(sv_arr[0])*np.real(sv_arr[1])+np.real(sv_arr[0])*np.imag(sv_arr[1]))]
     n = (x1[1]**2+y1[1]**2+z1[1]**2)**0.5
     a = Arrow3D(x1/n, y1/n, z1/n, mutation_scale=20,
-            lw=1, arrowstyle="-|>", color='r')
+            lw=1, arrowstyle="-|>", color="r")
     ax.add_artist(a)
     plt.savefig('bloch.tiff')
     #     A = plot_bloch_multivector(statevector)
     #     A.savefig('bloch.png')
     surf = pygame.image.load("bloch.tiff")
     screen.blit(surf,(0,0))
+    plt.close('all')
     pygame.display.flip()
     
-    clock.tick(30)
-    plt.close(fig)
+    
+    #FPS:
+    clock.tick(60)
 
 pygame.quit()
+
+
+# In[15]:
+
+
+sv_arr
+
+
+# In[5]:
+
+
+help(pygame.time.Clock())
+
+
+# In[ ]:
+
+
+
+
