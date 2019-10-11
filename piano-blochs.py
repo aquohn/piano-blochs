@@ -53,6 +53,9 @@ xcnt = 0
 ycnt = 0
 zcnt = 0
 
+x_ax_x = y_ax_y = z_ax_z = 1.8
+x_ax_y = x_ax_z = y_ax_x = y_ax_z = z_ax_x = z_ax_y = 0
+
 while running:
     screen.fill((0, 0, 0))
     
@@ -105,19 +108,21 @@ while running:
     ax.set_zlim3d(-1.3, 1.3)
     
     # z-axis
-    ax.plot([0, 0], [0, 0], [-1.8, 1.8], color=Z_COLOR)
-    ax.text(0, 0, 1.8, " + z", color=Z_COLOR)
-    ax.text(0, 0, -1.8, " - z", color=Z_COLOR)
+    ax.plot([-z_ax_x, z_ax_x], [-z_ax_y, z_ax_y], [-z_ax_z, z_ax_z], color=Z_COLOR)
+    ax.text(z_ax_x, z_ax_y, z_ax_z, " + z", color=Z_COLOR)
+    ax.text(-z_ax_x, -z_ax_y, -z_ax_z, " - z", color=Z_COLOR)
     
     # y-axis
-    ax.plot([0, 0], [-1.8, 1.8], [0, 0], color=Y_COLOR)
-    ax.text(0, 1.8, 0, " + y", color=Y_COLOR)
-    ax.text(0, -1.8, 0, " - y", color=Y_COLOR)
+    ax.plot([-y_ax_x, y_ax_x], [-y_ax_y, y_ax_y], [-y_ax_z, y_ax_z], color=Y_COLOR)
+    ax.text(y_ax_x, y_ax_y, y_ax_z, " + y", color=Y_COLOR)
+    ax.text(-y_ax_x, -y_ax_y, -y_ax_z, " - y", color=Y_COLOR)
     
     # x-axis
-    ax.plot([-1.8, 1.8], [0, 0], [0, 0], color=X_COLOR)
-    ax.text(1.8, 0, 0, " + x", color=X_COLOR)
-    ax.text(-1.8, 0, 0, " - x", color=X_COLOR)
+    ax.plot([-x_ax_x, x_ax_x], [-x_ax_y, x_ax_y], [-x_ax_z, x_ax_z], color=X_COLOR)
+    ax.text(x_ax_x, x_ax_y, x_ax_z, " + x", color=X_COLOR)
+    ax.text(-x_ax_x, -x_ax_y, -x_ax_z, " - x", color=X_COLOR)
+    
+    # TODO: use 3d rotation matrices to rotate the axes
     
     #ax.set_aspect("equal")
 
