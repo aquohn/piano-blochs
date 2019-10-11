@@ -1,0 +1,1 @@
+Let's build quantum piano tiles! Using a Bloch sphere as the interface, points appear on the surface of the sphere to the rhythm of the music. Apply quantum logic gates to bring your Bloch vector to the desired point! Remember that your system decays back to the ground state :)
