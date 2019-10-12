@@ -31,6 +31,7 @@ Y_COLOR = "orange"
 Z_COLOR = "blue"
 hit = 0
 TAPZONE = [[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
+x, y, z = 0, 0, 0
 
 class Arrow3D(FancyArrowPatch):
 
@@ -45,7 +46,7 @@ class Arrow3D(FancyArrowPatch):
         FancyArrowPatch.draw(self, renderer)
 
 pygame.init()
-myname = input('What is your name?')
+myname = input("What is your name? ")
 sv_arr = np.array([1,0])
 z1 = [0,1]
 circuit = QuantumCircuit(1,1) #1 qubit and 1 classical bit
@@ -89,7 +90,7 @@ x_ax_x = y_ax_y = z_ax_z = AXIS_SCALE
 x_ax_y = x_ax_z = y_ax_x = y_ax_z = z_ax_x = z_ax_y = 0
 rot = 0.5
 rotfactor = 1
-theta = pi / TURN_FRAMES
+theta = pi / (2 * TURN_FRAMES)
 
 # 3D rotation matrices
 rotX = np.array([[1, 0, 0],
@@ -192,6 +193,8 @@ while running:
                     combotext = "MISS!"
         elif event.type == QUIT:
             running = False
+            
+    valid_hit = (sv_arr[0] == 1 and z == 1) or (sv_arr[0] == 0 and z == -1)
 
     if hit == 1 and time < note_time_arr[0] - 1000:
         continue
@@ -199,23 +202,22 @@ while running:
         combo = 0
         combotext = "MISS!"
         np.delete(note_time_arr,0)
-    elif hit == 1 and abs(time - note_time_arr[0]) < 500 and 1-int(key) in zs:
+    elif hit == 1 and abs(time - note_time_arr[0]) < 500 and valid_hit:
         combo += 1
         combotext = "PERFECT!"
-        score += 1/(1+abs(time-note_time_arr[0]))*score_per_note
+        score += 1/(1+abs(time-note_time_arr[0]))*SCORE_PER_NOTE
         np.delete(note_time_arr,0)
         hit = 0
-    elif hit == 1 and abs(time - note_time_arr[0]) < 1000 and 1-int(key) in zs:
-        combo += 1
-        combotext = "GREAT!"
-        score += 1/(1+abs(time-note_time_arr[0]))*score_per_note
-        np.delete(note_time_arr,0)
+    elif hit == 1 and abs(time - note_time_arr[0]) < 1000:
+        if valid_hit:
+            combo += 1
+            combotext = "GREAT!"
+            score += 1/(1+abs(time-note_time_arr[0]))*SCORE_PER_NOTE
+        else:
+            combo = 0
+            combotext = "MISS!"
         hit = 0
-    elif hit == 1 and abs(time - note_time_arr[0]) < 1000 and 1-int(key) not in zs:
-        combo = 0
-        combotext = "MISS!"
         np.delete(note_time_arr,0)
-        hit = 0
     
     # Rotation
     if xcnt > 0:
@@ -273,7 +275,6 @@ while running:
         zcnt -= 1
     
     fig = plt.figure(figsize=(10,10))
-    #ax = plt.gca(projection='3d')
     ax = Axes3D(fig)
     ax._axis3don = False
     ax.set_xlim3d(-1.3, 1.3)
@@ -294,10 +295,6 @@ while running:
     ax.plot([-x_ax_x, x_ax_x], [-x_ax_y, x_ax_y], [-x_ax_z, x_ax_z], color=X_COLOR)
     ax.text(x_ax_x, x_ax_y, x_ax_z, " + x", color=X_COLOR)
     ax.text(-x_ax_x, -x_ax_y, -x_ax_z, " - x", color=X_COLOR)
-    
-    # TODO: use 3d rotation matrices to rotate the axes
-    
-    #ax.set_aspect("equal")
 
     # draw sphere
     u, v = np.mgrid[0:2*pi:50j, 0:pi:25j]
@@ -309,7 +306,7 @@ while running:
     result = execute(circuit, backend = simulator).result()
     sv_arr = result.get_statevector()
     z1 = [0,-np.real(1-2*np.conj(sv_arr[0])*sv_arr[0])]
-    rotfactor = abs(z1[1]) + 0.05
+    rotfactor = abs(z1[1]) + 0.05 # smooth precession
     x1 = [0,2*(np.real(sv_arr[0])*np.real(sv_arr[1])+np.imag(sv_arr[0])*np.imag(sv_arr[1]))]
     y1 = [0,2*(np.imag(sv_arr[0])*np.real(sv_arr[1])+np.real(sv_arr[0])*np.imag(sv_arr[1]))]
     n = (x1[1]**2+y1[1]**2+z1[1]**2)**0.5
@@ -319,24 +316,31 @@ while running:
 
     #add points for the rhythm
     for i in range(len(note_time_arr)):
+        xarr = [x_ax_x, y_ax_x, z_ax_x]
+        yarr = [x_ax_y, y_ax_y, z_ax_y]
+        zarr = [x_ax_z, y_ax_z, z_ax_z]
+        
+        idx = point_idxs[i] - 3
+        if idx < 0:
+            idx = (-1 * idx) - 1
+            x = -xarr[idx] / AXIS_SCALE
+            y = -yarr[idx] / AXIS_SCALE
+            z = -zarr[idx] / AXIS_SCALE
+        else:
+            x = xarr[idx] / AXIS_SCALE
+            y = yarr[idx] / AXIS_SCALE
+            z = zarr[idx] / AXIS_SCALE
+        
         if note_time_arr[i] - time < time_delay and time < note_time_arr[i]: #fade in
 #             plot point list[i] on bloch sphere with opacity = 1- (note_time_arr[i]-time)/time delay
-            ax.scatter(xs[i],ys[i],zs[i], s=200, color=(0.5,0,1,1-(note_time_arr[i]-time)/time_delay)) 
-            #,alpha = 1- (note_time_arr[i]-time)/time_delay
-#             ax.add_artist(a)
-#             print(str(time)+"Yes")
+            ax.scatter(x,y,z, s=200, color=(0.5,0,1,1-(note_time_arr[i]-time)/time_delay)) 
+
         elif time - note_time_arr[i] < time_delay_out and time > note_time_arr[i]: #fade out
 #             plot point list[i] on bloch sphere with opacity = 1- (time - note_time_arr[i])/time delay out
-            ax.scatter(xs[i],ys[i],zs[i], s=200, color=(0.5,0,1,1- (time - note_time_arr[i])/time_delay_out)) 
+            ax.scatter(x,y,z, s=200, color=(0.5,0,1,1- (time - note_time_arr[i])/time_delay_out)) 
 #             print(str(time)+"No")
         else:
             continue
-#    if note_time_arr[0] - time < time_delay and time < note_time_arr[0]: #fade in
-#        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(note_time_arr[0]-time)/time_delay))
-#    elif time - note_time_arr[0] < time_delay_out and time > note_time_arr[0]: #fade out
-#        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(time-note_time_arr[0])/time_delay_out))
-#    else:
-#        continue
 
     plt.savefig('bloch.tiff')
     surf = pygame.image.load("bloch.tiff")
