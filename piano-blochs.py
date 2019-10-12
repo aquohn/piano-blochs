@@ -25,8 +25,6 @@ SCREEN_HEIGHT=650
 X_COLOR = "green"
 Y_COLOR = "orange"
 Z_COLOR = "blue"
-<<<<<<< Updated upstream
-=======
 TAPZONE = np.array([[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]])
 xs,ys,zs = [],[],[]
 hit = 0
@@ -50,7 +48,6 @@ def RandomEventGenerator(simulator):
         xs = np.array([TAPZONE[i][0] for i in b])
         ys = np.array([TAPZONE[i][1] for i in b])
         zs = np.array([TAPZONE[i][2] for i in b])
->>>>>>> Stashed changes
 
 class Arrow3D(FancyArrowPatch):
 
@@ -82,17 +79,14 @@ time_delay_out = 1000
 time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
-<<<<<<< Updated upstream
 timing = [5000, 7000]
 list = np.array([[0.6,0.8], [-0.8, 0.6]])
-=======
 timing = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
 checklist=np.zeros(len(timing))
 
 combo=0
 combotext=str()
 score = 0
->>>>>>> Stashed changes
 
 # Getting the wav
 song = pygame.mixer.Sound("testes.wav") #use wav is best apparently
@@ -150,12 +144,6 @@ while running:
                 for key in counts:
                     sv_arr[int(key)] = 1
                     sv_arr[1-int(key)] = 0
-<<<<<<< Updated upstream
-                # Check if statevector coincides with point here
- 
-        elif event.type == QUIT:
-            running = False
-=======
                 hit = 1
 
         elif event.type == QUIT:
@@ -184,7 +172,6 @@ while running:
         combotext = "MISS!"
         np.delete(timing,0)
         hit = 0
->>>>>>> Stashed changes
     
     if xcnt > 0:
         circuit.rx(pi / TURN_FRAMES, 0)
@@ -241,7 +228,6 @@ while running:
     ax.add_artist(a)
 
     #add points for the rhythm
-<<<<<<< Updated upstream
     for i in range(len(timing)):
         if timing[i] - time < time_delay and time < timing[i]: #fade in
 #             plot point list[i] on bloch sphere with opacity = 1- (timing[i]-time)/time delay
@@ -265,7 +251,6 @@ while running:
 #             print(str(time)+"No")
         else:
             continue
-=======
     RandomEventGenerator(simulator)
 #    if timing[0] - time < time_delay and time < timing[0]: #fade in
 #        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(timing[0]-time)/time_delay))
@@ -273,7 +258,6 @@ while running:
 #        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(time-timing[0])/time_delay_out))
 #    else:
 #        continue
->>>>>>> Stashed changes
 
     plt.savefig('bloch.tiff')
     surf = pygame.image.load("bloch.tiff")
