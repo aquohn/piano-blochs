@@ -65,7 +65,6 @@ time0 = int(pygame.time.get_ticks())
 timing = [5000, 7000]
 list = np.array([[0.6,0.8], [-0.8, 0.6]])
 note_time_arr = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
-checklist=np.zeros(len(note_time_arr))
 
 # Generate note distribution for each note
 rand = QuantumCircuit(6,6)
@@ -133,6 +132,7 @@ while (end_it==False):
     screen.blit(nlabel,(200,200))
     pygame.display.flip()
 time0 = int(pygame.time.get_ticks())
+<<<<<<< HEAD
 pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
 
 persistence = 1
