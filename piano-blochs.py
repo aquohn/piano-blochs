@@ -25,12 +25,12 @@ BPM = 119
 B_FIELD = 0.03
 SCREEN_WIDTH=640
 SCREEN_HEIGHT=650
+AXIS_SCALE = 1.8
 X_COLOR = "green"
 Y_COLOR = "orange"
 Z_COLOR = "blue"
 hit = 0
 TAPZONE = [[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
-xs, ys, zs = list(), list(), list()
 
 class Arrow3D(FancyArrowPatch):
 
@@ -62,17 +62,11 @@ time_delay_out = 1000
 time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
-timing = [5000, 7000]
-list = np.array([[0.6,0.8], [-0.8, 0.6]])
 note_time_arr = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
 checklist=np.zeros(len(note_time_arr))
 
 # Generate note distribution for each note
 point_idxs = np.random.randint(0,6,len(note_time_arr))
-for idx in point_idxs:
-    xs.append(TAPZONE[idx][0])
-    ys.append(TAPZONE[idx][1])
-    zs.append(TAPZONE[idx][2])
 
 combo=0
 combotext=str()
@@ -91,7 +85,7 @@ SCORE_PER_NOTE = MAXSCORE/len(note_time_arr)
 xcnt = 0
 ycnt = 0
 zcnt = 0
-x_ax_x = y_ax_y = z_ax_z = 1.8
+x_ax_x = y_ax_y = z_ax_z = AXIS_SCALE
 x_ax_y = x_ax_z = y_ax_x = y_ax_z = z_ax_x = z_ax_y = 0
 rot = 0.5
 rotfactor = 1
@@ -199,28 +193,28 @@ while running:
         elif event.type == QUIT:
             running = False
 
-    if hit == 1 and time < timing[0] - 1000:
+    if hit == 1 and time < note_time_arr[0] - 1000:
         continue
-    elif hit == 0 and time > timing[0] + 1000:
+    elif hit == 0 and time > note_time_arr[0] + 1000:
         combo = 0
         combotext = "MISS!"
-        np.delete(timing,0)
-    elif hit == 1 and abs(time - timing[0]) < 500 and 1-int(key) in zs:
+        np.delete(note_time_arr,0)
+    elif hit == 1 and abs(time - note_time_arr[0]) < 500 and 1-int(key) in zs:
         combo += 1
         combotext = "PERFECT!"
-        score += 1/(1+abs(time-timing[0]))*score_per_note
-        np.delete(timing,0)
+        score += 1/(1+abs(time-note_time_arr[0]))*score_per_note
+        np.delete(note_time_arr,0)
         hit = 0
-    elif hit == 1 and abs(time - timing[0]) < 1000 and 1-int(key) in zs:
+    elif hit == 1 and abs(time - note_time_arr[0]) < 1000 and 1-int(key) in zs:
         combo += 1
         combotext = "GREAT!"
-        score += 1/(1+abs(time-timing[0]))*score_per_note
-        np.delete(timing,0)
+        score += 1/(1+abs(time-note_time_arr[0]))*score_per_note
+        np.delete(note_time_arr,0)
         hit = 0
-    elif hit == 1 and abs(time - timing[0]) < 1000 and 1-int(key) not in zs:
+    elif hit == 1 and abs(time - note_time_arr[0]) < 1000 and 1-int(key) not in zs:
         combo = 0
         combotext = "MISS!"
-        np.delete(timing,0)
+        np.delete(note_time_arr,0)
         hit = 0
     
     # Rotation
@@ -337,10 +331,10 @@ while running:
 #             print(str(time)+"No")
         else:
             continue
-#    if timing[0] - time < time_delay and time < timing[0]: #fade in
-#        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(timing[0]-time)/time_delay))
-#    elif time - timing[0] < time_delay_out and time > timing[0]: #fade out
-#        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(time-timing[0])/time_delay_out))
+#    if note_time_arr[0] - time < time_delay and time < note_time_arr[0]: #fade in
+#        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(note_time_arr[0]-time)/time_delay))
+#    elif time - note_time_arr[0] < time_delay_out and time > note_time_arr[0]: #fade out
+#        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(time-note_time_arr[0])/time_delay_out))
 #    else:
 #        continue
 
