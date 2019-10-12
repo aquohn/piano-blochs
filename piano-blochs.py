@@ -69,16 +69,16 @@ checklist=np.zeros(len(note_time_arr))
 # Generate note distribution for each note
 rand = QuantumCircuit(6,6)
 rand.h([0,1,2,3,4,5])
-for i in range(len(note_time_arr)):
+for j in range(len(note_time_arr)):
     rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
     counts = execute(rand,backend=simulator,shots=1).result().get_counts()
     for key in counts:
         a = key
         b = [pos for pos, i in enumerate(key) if i == 1]
         if len(b) == 0:
-            xs = TAPZONE[:][0]
-            ys = TAPZONE[:][1]
-            zs = TAPZONE[:][2]
+            xs.append(TAPZONE[:][0])
+            ys.append(TAPZONE[:][1])
+            zs.append(TAPZONE[:][2])
         else:
             c = np.array([TAPZONE[i] for i in b])
             xs.append(np.array([TAPZONE[i][0] for i in b]))
@@ -335,7 +335,6 @@ while running:
 #             print(str(time)+"No")
         else:
             continue
-    RandomEventGenerator(simulator)
 #    if timing[0] - time < time_delay and time < timing[0]: #fade in
 #        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(timing[0]-time)/time_delay))
 #    elif time - timing[0] < time_delay_out and time > timing[0]: #fade out
