@@ -20,6 +20,8 @@ from numpy import pi
 
 TURN_FRAMES = 4        
 B_FIELD = 0.01
+EASY = 10
+BPM = 119
 SCREEN_WIDTH=640
 SCREEN_HEIGHT=650
 X_COLOR = "green"
@@ -62,7 +64,7 @@ class Arrow3D(FancyArrowPatch):
         FancyArrowPatch.draw(self, renderer)
 
 pygame.init()
-
+myname = input('What is your name?')
 sv_arr = np.array([1,0])
 z1 = [0,1]
 circuit = QuantumCircuit(1,1) #1 qubit and 1 classical bit
@@ -92,7 +94,7 @@ score = 0
 song = pygame.mixer.Sound("testes.wav") #use wav is best apparently
 
 pygame.mixer.music.load('testes.wav')
-pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
+
 
 # Rotation stuff
 xcnt = 0
@@ -105,18 +107,18 @@ x_ax_y = x_ax_z = y_ax_x = y_ax_z = z_ax_x = z_ax_y = 0
 black=(0,0,0)
 end_it=False
 while (end_it==False):
-    window.fill(black)
+    screen.fill(black)
     myfont=pygame.font.SysFont("Britannic Bold", 40)
     nlabel=myfont.render("Welcome "+myname+" Start Screen", 1, (255, 0, 0))
     for event in pygame.event.get():
         if event.type==MOUSEBUTTONDOWN:
             end_it=True
-    window.blit(nlabel,(200,200))
+    screen.blit(nlabel,(200,200))
     pygame.display.flip()
 
 while running:
     screen.fill((0, 0, 0))
-    
+    pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
     time = int(pygame.time.get_ticks())-time0
     
     # Initialization
