@@ -28,13 +28,7 @@ X_COLOR = "green"
 Y_COLOR = "orange"
 Z_COLOR = "blue"
 TAPZONE = [[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
-xs,ys,zs = list(), list(), list()
-
-def RandomEventGenerator(simulator):
-    global xs
-    global ys
-    global zs
-    
+xs, ys, zs = list(), list(), list()
 
 class Arrow3D(FancyArrowPatch):
 
