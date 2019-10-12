@@ -49,6 +49,10 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 running = True
 
 clock = pygame.time.Clock()
+
+time_delay = 3000 #milliseconds
+time_delay_out = 1000
+
 time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
@@ -57,6 +61,9 @@ list = np.array([[0.6,0.8], [-0.8, 0.6]])
 
 # Getting the wav
 song = pygame.mixer.Sound("testes.wav") #use wav is best apparently
+
+pygame.mixer.music.load('testes.wav')
+pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
 
 # Rotation stuff
 xcnt = 0
@@ -67,6 +74,8 @@ x_ax_y = x_ax_z = y_ax_x = y_ax_z = z_ax_x = z_ax_y = 0
 
 while running:
     screen.fill((0, 0, 0))
+    
+    time = int(pygame.time.get_ticks())-time0
     
     # Initialization
     circuit = QuantumCircuit(1,1) #1 qubit and 1 classical bit
