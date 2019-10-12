@@ -119,6 +119,19 @@ rotZ = np.array([[np.cos(theta), np.sin(theta), 0],
                 [-np.sin(theta), np.cos(theta), 0],
                 [0, 0, 1]])
 
+# Start screen
+black=(0,0,0)
+end_it=False
+while (end_it==False):
+    window.fill(black)
+    myfont=pygame.font.SysFont("Britannic Bold", 40)
+    nlabel=myfont.render("Welcome "+myname+" Start Screen", 1, (255, 0, 0))
+    for event in pygame.event.get():
+        if event.type==MOUSEBUTTONDOWN:
+            end_it=True
+    window.blit(nlabel,(200,200))
+    pygame.display.flip()
+
 while running:
     screen.fill((0, 0, 0))
     
