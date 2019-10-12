@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="f18ed2b7-8988-4154-ab30-d287cd13fdad" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/bloch.tiff" beforeDir="false" afterPath="$PROJECT_DIR$/bloch.tiff" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/piano-blochs.py" beforeDir="false" afterPath="$PROJECT_DIR$/piano-blochs.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />

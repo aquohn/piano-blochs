@@ -23,15 +23,15 @@ B_FIELD = 0.01
 EASY = 10
 BPM = 119
 B_FIELD = 0.03
-SCREEN_WIDTH=640
+SCREEN_WIDTH=700
 SCREEN_HEIGHT=650
 AXIS_SCALE = 1.8
 X_COLOR = "green"
 Y_COLOR = "orange"
 Z_COLOR = "blue"
-hit = 0
+measured = 0
 TAPZONE = [[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
-x, y, z = 0, 0, 0
+#x, y, z = 0, 0, 0
 lock = False
 
 
@@ -66,6 +66,7 @@ time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
 note_time_arr = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
+note_cnt = 0
 
 # Generate note distribution for each note
 point_idxs = np.random.randint(0,6,len(note_time_arr))
@@ -115,14 +116,15 @@ while (end_it==False):
     for event in pygame.event.get():
         if event.type==MOUSEBUTTONDOWN:
             end_it=True
-    screen.blit(nlabel,(200,200))
+    screen.blit(nlabel,(150,200))
     pygame.display.flip()
     
 time0 = int(pygame.time.get_ticks())
 pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
 persistence = 1
-
+john=0  
 while running:
+    
     if persistence == 1:
         screen.fill((0, 0, 0))
         time = int(pygame.time.get_ticks())-time0
@@ -157,36 +159,63 @@ while running:
                     result = execute(circuit,backend=backend,shots = 1).result()
                     counts = result.get_counts()
                     for key in counts:
-                        sv_arr[int(key)] = 1
-                        sv_arr[1-int(key)] = 0
-                    hit = 1
+                        print(int(key))
+                        if int(key) == 0:
+                            sv_arr[0] = 1
+                            sv_arr[1] = 0
+                        else:
+                            sv_arr[0] = 0
+                            sv_arr[1] = 1
+                    measured = 1
             elif event.type == QUIT:
                 running = False
-                
-        valid_hit = (sv_arr[0] == 1 and z == 1) or (sv_arr[0] == 0 and z == -1)
+        
+        #print("Note " + str(note_cnt) + ", z has value " + str(z))
+        #valid_hit = (np.real(sv_arr[0]) == 0  and point_idxs[note_cnt] == -3) or (np.real(sv_arr[0]) == 1 and point_idxs[note_cnt] == 2)
+        valid_hit = (np.real(sv_arr[0]) == 0 and john < -0.8) or (np.real(sv_arr[0]) == 1 and john > 0.8)
 
-        if hit == 1 and time < note_time_arr[0] - 1000:
-            continue
-        elif hit == 0 and time > note_time_arr[0] + 1000:
-            combo = 0
-            combotext = "MISS!"
-            np.delete(note_time_arr,0)
-        elif hit == 1 and abs(time - note_time_arr[0]) < 500 and valid_hit:
-            combo += 1
-            combotext = "PERFECT!"
-            score += 1/(1+abs(time-note_time_arr[0]))*SCORE_PER_NOTE
-            np.delete(note_time_arr,0)
-            hit = 0
-        elif hit == 1 and abs(time - note_time_arr[0]) < 1000:
-            if valid_hit:
-                combo += 1
-                combotext = "GREAT!"
-                score += 1/(1+abs(time-note_time_arr[0]))*SCORE_PER_NOTE
-            else:
+        if measured == 0 :
+            if time >= note_time_arr[note_cnt] + 1000:
                 combo = 0
+                print("miss!")
                 combotext = "MISS!"
-            hit = 0
-            np.delete(note_time_arr,0)
+                note_cnt += 1
+        if measured == 1:
+            #measured = 0
+            print("measurement!")
+            print(note_time_arr[note_cnt])
+            print("sv_arr is " + str(sv_arr))
+            print("Target z is " + str(john))
+            print(time)
+            
+            if valid_hit:
+                print("Valid hit!")
+            if time < note_time_arr[note_cnt] - 1000:
+                print("Too early!")
+                combotext = "TOO EARLY!"
+                continue
+            elif abs(time - note_time_arr[note_cnt]) < 500 and valid_hit:
+                combo += 1
+                combotext = "PERFECT!"
+                print("perfect!")
+                score += 1/(1+abs(time-note_time_arr[note_cnt]))*SCORE_PER_NOTE
+                note_cnt += 1
+            elif abs(time - note_time_arr[note_cnt]) < 1000:
+                if valid_hit:
+                    combo += 1
+                    combotext = "GREAT!"
+                    print("great!")
+                    score += 1/(1+abs(time-note_time_arr[note_cnt]))*SCORE_PER_NOTE
+                else:
+                    print("wrong side!")
+                    combo = 0
+                    combotext = "MISS!"
+                note_cnt += 1
+        
+        if note_cnt == len(note_time_arr):
+            persistence = 0
+        #cheat code
+        #print(note_time_arr)
         
         # Rotation
         if xcnt > 0:
@@ -273,13 +302,16 @@ while running:
 
         # draw sphere
         u, v = np.mgrid[0:2*pi:50j, 0:pi:25j]
-        x = np.cos(u)*np.sin(v)
-        y = np.sin(u)*np.sin(v)
-        z = np.cos(v)
-        ax.plot_wireframe(x, y, z, color=(0,0,0,0.2))
-
-        result = execute(circuit, backend = simulator).result()
-        sv_arr = result.get_statevector()
+        sphere_x = np.cos(u)*np.sin(v)
+        sphere_y = np.sin(u)*np.sin(v)
+        sphere_z = np.cos(v)
+        ax.plot_wireframe(sphere_x, sphere_y, sphere_z, color=(0,0,0,0.2))
+        
+        if not measured:
+            result = execute(circuit, backend = simulator).result()
+            sv_arr = result.get_statevector()
+        else:
+            measured = False
         z1 = [0,-np.real(1-2*np.conj(sv_arr[0])*sv_arr[0])]
         rotfactor = abs(z1[1]) + 0.05 # smooth precession
         x1 = [0,2*(np.real(sv_arr[0])*np.real(sv_arr[1])+np.imag(sv_arr[0])*np.imag(sv_arr[1]))]
@@ -288,7 +320,7 @@ while running:
         a = Arrow3D(x1/n, y1/n, z1/n, mutation_scale=20,
                 lw=1, arrowstyle="-|>", color='r')
         ax.add_artist(a)
-
+        
         #add points for the rhythm
         for i in range(len(note_time_arr)):
             xarr = [x_ax_x, y_ax_x, z_ax_x]
@@ -301,19 +333,23 @@ while running:
                 x = -xarr[idx] / AXIS_SCALE
                 y = -yarr[idx] / AXIS_SCALE
                 z = -zarr[idx] / AXIS_SCALE
+
             else:
                 x = xarr[idx] / AXIS_SCALE
                 y = yarr[idx] / AXIS_SCALE
                 z = zarr[idx] / AXIS_SCALE
+                         
+            #TODO: fix the case where more than one note is present
             
             if note_time_arr[i] - time < time_delay and time < note_time_arr[i]: #fade in
 #             plot point list[i] on bloch sphere with opacity = 1- (note_time_arr[i]-time)/time delay
                 ax.scatter(x,y,z, s=200, color=(0.5,0,1,1-(note_time_arr[i]-time)/time_delay)) 
-
+                john = z
             elif time - note_time_arr[i] < time_delay_out and time > note_time_arr[i]: #fade out
 #             plot point list[i] on bloch sphere with opacity = 1- (time. - note_time_arr[i])/time delay out
                 ax.scatter(x,y,z, s=200, color=(0.5,0,1,1- (time - note_time_arr[i])/time_delay_out)) 
 #             print(str(time)+"No")
+                john = z
             else:
                 continue
 
@@ -322,7 +358,7 @@ while running:
         screen.blit(surf,(0,0))
 
         font = pygame.font.SysFont('comicsans', 30, True)
-        timetext = font.render("Time: " + str(time), 1, (0,0,0)) 
+        timetext = font.render("Score: " + str(int(score)), 1, (0,0,0)) 
         combohaha = font.render("Combo: " + str(combo), 1, (0,0,0))
         combotext2 = font.render(str(combotext), 1, (0,0,0))
         screen.blit(timetext, (0, 0))
@@ -337,6 +373,7 @@ while running:
         screen.fill(black)
         myfont=pygame.font.SysFont("Britannic Bold", 40)
         nlabel=myfont.render("Gameover", 1, (255, 0, 0))
+        pygame.mixer.music.stop()
         for event in pygame.event.get():
             if event.type == KEYDOWN:
                 if event.key==K_ESCAPE:
