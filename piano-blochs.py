@@ -57,13 +57,22 @@ time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
 timing = [5000, 7000]
-list = np.array([[0.6,0.8], [-0.8, 0.6]])
+list = np.array([[1,0], [1, 0]])
+
+checklist=np.zeros(len(list))
+
+combo=0
+combotext=str()
+score = 0
 
 # Getting the wav
 song = pygame.mixer.Sound("testes.wav") #use wav is best apparently
 
 pygame.mixer.music.load('testes.wav')
 pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
+
+maxscore = 1000000
+score_per_note = maxscore/len(list)
 
 # Rotation stuff
 xcnt = 0
@@ -117,9 +126,61 @@ while running:
                     sv_arr[int(key)] = 1
                     sv_arr[1-int(key)] = 0
                 # Check if statevector coincides with point here
- 
+
+
+                # OSU!!!
+                hit = 0 #check if there is a valid hit (no double counting)
+                for i in range(len(timing)): #find the closest beat timing[i] that is after current time, and the associated time diff
+                    if timing[i] > time: #check that the note is later than current time
+                        if timing[i]- time > time - timing[i-1]:
+                            time_diff = time - timing[i-1] #late for the i-1 the note
+                            if checklist[i-1] == 1: #check if note is already played
+                                break
+                            else:
+                                checklist[i-1] = 1
+                                hit = 1
+                        else:
+                            time_diff = timing[i] - time #early for the ith note
+                            if checklist[i] == 1: #check if note is already played
+                                break
+                            else:
+                                checklist[i] = 1
+                                hit = 1
+                    elif timing[i] == timing[-1]: #accounting for last note
+                        time_diff = time - timing[i] #late for the last note
+                        if checklist[i] == 1: #check if note is already played
+                            break
+                        else:
+                            checklist[i] = 1
+                            hit = 1
+                if hit == 1:
+                    #measure state, return probability of getting point? +z? as probability
+
+                    if time_diff < time+500: #if timing is early
+                        combo = 0
+                        combotext = "MISS!"
+                    elif time_diff > time-500: #if timing is late
+                        combo = 0
+                        combotext = "MISS!"
+                    else: 
+                        if int(key) == 0: # (1/(1+time_diff) * probability)<0.5:
+                            combo = 0
+                            combotext = "MISS!"
+                        else:
+                            combo += 1
+                            score += 1/(1+time_diff)*score_per_note
+                            combotext = str(combo)
+                else:
+                    combo = 0
+                    combotext = "MISS!"
+
         elif event.type == QUIT:
             running = False
+
+
+
+#        elif event.type == QUIT:
+#            running = False
     
     # Rotation
     if xcnt > 0:
@@ -254,7 +315,10 @@ while running:
 
     font = pygame.font.SysFont('comicsans', 30, True)
     timetext = font.render("Time: " + str(time), 1, (0,0,0)) 
-    screen.blit(timetext, (200, 0))
+    combotext2 = font.render("Combo: " + str(combotext), 1, (0,0,0))
+    #scoretext = font.render()
+    screen.blit(timetext, (0, 0))
+    screen.blit(combotext2, (200, 0))
 
     pygame.display.flip()
     
