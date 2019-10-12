@@ -67,23 +67,11 @@ note_time_arr = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
 checklist=np.zeros(len(note_time_arr))
 
 # Generate note distribution for each note
-rand = QuantumCircuit(6,6)
-rand.h([0,1,2,3,4,5])
-for j in range(len(note_time_arr)):
-    rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
-    counts = execute(rand,backend=simulator,shots=1).result().get_counts()
-    for key in counts:
-        a = key
-        b = [pos for pos, i in enumerate(key) if i == 1]
-        if len(b) == 0:
-            xs.append(TAPZONE[:][0])
-            ys.append(TAPZONE[:][1])
-            zs.append(TAPZONE[:][2])
-        else:
-            c = np.array([TAPZONE[i] for i in b])
-            xs.append(np.array([TAPZONE[i][0] for i in b]))
-            ys.append(np.array([TAPZONE[i][1] for i in b]))
-            zs.append(np.array([TAPZONE[i][2] for i in b]))
+point_idxs = np.random.randint(0,6,len(note_time_arr))
+for idx in point_idxs:
+    xs.append(TAPZONE[idx][0])
+    ys.append(TAPZONE[idx][1])
+    zs.append(TAPZONE[idx][2])
 
 combo=0
 combotext=str()
