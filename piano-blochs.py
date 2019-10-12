@@ -106,6 +106,7 @@ rotZ = np.array([[np.cos(theta), np.sin(theta), 0],
 # Start screen
 black=(0,0,0)
 end_it=False
+
 while (end_it==False):
     screen.fill(black)
     myfont=pygame.font.SysFont("Britannic Bold", 40)
@@ -115,10 +116,12 @@ while (end_it==False):
             end_it=True
     screen.blit(nlabel,(200,200))
     pygame.display.flip()
+    
 time0 = int(pygame.time.get_ticks())
+pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
+
 while running:
     screen.fill((0, 0, 0))
-    pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
     time = int(pygame.time.get_ticks())-time0
     
     # Initialization
