@@ -34,13 +34,14 @@ def RandomEventGenerator(simulator):
     global xs
     global ys
     global zs
-    rand = QuantumCircuit(6,6)
+    '''rand = QuantumCircuit(6,6)
     rand.h([0,1,2,3,4,5])
     rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
     counts = execute(rand,backend=simulator,shots=1).result().get_counts()
     for key in counts:
-        a = key
-    b = [pos for pos, char in enumerate(a) if char == '1']
+        a = key'''
+    a = np.random.randint(0,1,6)
+    b = [pos for pos, i in enumerate(a) if i == 1]
     if len(b) == 0:
         xs = TAPZONE[:][0]
         ys = TAPZONE[:][1]
@@ -81,10 +82,10 @@ time_delay_out = 1000
 time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
-timing = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
+note_time_arr = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
 #list = np.array([[1,0], [1, 0]])
 
-checklist=np.zeros(len(timing))
+checklist=np.zeros(len(note_time_arr))
 
 combo=0
 combotext=str()
@@ -96,8 +97,8 @@ song = pygame.mixer.Sound("testes.wav") #use wav is best apparently
 pygame.mixer.music.load('testes.wav')
 pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
 
-maxscore = 1000000
-score_per_note = maxscore/len(timing)
+MAXSCORE = 1000000
+SCORE_PER_NOTE = MAXSCORE/len(note_time_arr)
 
 # Rotation stuff
 xcnt = 0
@@ -154,33 +155,33 @@ while running:
 
                 # OSU!!!
                 hit = 0 #check if there is a valid hit (no double counting)
-                for i in range(len(timing)): #find the closest beat timing[i] that is after current time, and the associated time diff
-                    if timing[i] > time: #check that the note is later than current time
-                        if timing[i]- time > time - timing[i-1]:
-                            time_diff = time - timing[i-1] #late for the i-1 the note
+                for i in range(len(note_time_arr)): #find the closest beat note_time_arr[i] that is after current time, and the associated time diff
+                    if note_time_arr[i] > time: #check that the note is later than current time
+                        if note_time_arr[i] - time > time - note_time_arr[i-1]:
+                            time_diff = time - note_time_arr[i-1] #late for the i-1 the note
                             if checklist[i-1] == 1: #check if note is already played
                                 break
                             else:
                                 checklist[i-1] = 1
                                 hit = 1
                         else:
-                            time_diff = timing[i] - time #early for the ith note
+                            time_diff = note_time_arr[i] - time #early for the ith note
                             if checklist[i] == 1: #check if note is already played
                                 break
                             else:
                                 checklist[i] = 1
                                 hit = 1
-                    elif timing[i] == timing[-1]: #accounting for last note
-                        time_diff = time - timing[i] #late for the last note
+                    elif note_time_arr[i] == note_time_arr[-1]: #accounting for last note
+                        time_diff = time - note_time_arr[i] #late for the last note
                         if checklist[i] == 1: #check if note is already played
                             break
                         else:
                             checklist[i] = 1
                             hit = 1
+                            
                 if hit == 1:
                     #measure state, return probability of getting point? +z? as probability
-
-                    if abs(time_diff) > 1000: #if timing is early
+                    if abs(time_diff) > 1000: #if note_time_arr is early
                         combo = 0
                         combotext = "MISS!"
                     elif int(key)==1:  # (1/(1+time_diff) * probability)<0.5:
@@ -188,7 +189,7 @@ while running:
                         combotext = "MISS!"
                     else:
                         combo += 1
-                        score += 1/(1+time_diff)*score_per_note
+                        score += 1/(1+time_diff)*NOTE_SCORE
                         combotext = str(combo)
                 else:
                     combo = 0
@@ -197,11 +198,6 @@ while running:
         elif event.type == QUIT:
             running = False
 
-
-
-#        elif event.type == QUIT:
-#            running = False
-    
     # Rotation
     if xcnt > 0:
         # axis rotation
@@ -217,7 +213,7 @@ while running:
         z_ax_z = z_ax_arr[2]
         
         # state vector rotation
-        circuit.rx(pi / TURN_FRAMES, 0)
+        circuit.rx(theta, 0)
 
         xcnt -= 1 
 
@@ -235,7 +231,7 @@ while running:
         z_ax_z = z_ax_arr[2]
 
         # state vector rotation
-        circuit.ry(pi / TURN_FRAMES, 0)
+        circuit.ry(theta, 0)
 
         ycnt -= 1
 
@@ -253,7 +249,7 @@ while running:
         z_ax_y = z_ax_arr[1]
 
         # state vector rotation
-        circuit.rz(pi / TURN_FRAMES, 0)
+        circuit.rz(theta, 0)
 
         zcnt -= 1
     
@@ -303,17 +299,17 @@ while running:
     ax.add_artist(a)
 
     #add points for the rhythm
-    for i in range(len(timing)):
+    for i in range(len(note_time_arr)):
         RandomEventGenerator(simulator)
-        if timing[i] - time < time_delay and time < timing[i]: #fade in
-#             plot point list[i] on bloch sphere with opacity = 1- (timing[i]-time)/time delay
-            ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1-(timing[i]-time)/time_delay)) 
-            #,alpha = 1- (timing[i]-time)/time_delay
+        if note_time_arr[i] - time < time_delay and time < note_time_arr[i]: #fade in
+#             plot point list[i] on bloch sphere with opacity = 1- (note_time_arr[i]-time)/time delay
+            ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1-(note_time_arr[i]-time)/time_delay)) 
+            #,alpha = 1- (note_time_arr[i]-time)/time_delay
 #             ax.add_artist(a)
 #             print(str(time)+"Yes")
-        elif time - timing[i] < time_delay_out and time > timing[i]: #fade out
-#             plot point list[i] on bloch sphere with opacity = 1- (time - timing[i])/time delay out
-            ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1- (time - timing[i])/time_delay_out)) 
+        elif time - note_time_arr[i] < time_delay_out and time > note_time_arr[i]: #fade out
+#             plot point list[i] on bloch sphere with opacity = 1- (time - note_time_arr[i])/time delay out
+            ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1- (time - note_time_arr[i])/time_delay_out)) 
 #             print(str(time)+"No")
         else:
             continue
