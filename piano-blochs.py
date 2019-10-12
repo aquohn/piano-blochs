@@ -49,10 +49,19 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 running = True
 
 clock = pygame.time.Clock()
+time0 = int(pygame.time.get_ticks())
+
+#Song stuff:
+timing = [5000, 7000]
+list = np.array([[0.6,0.8], [-0.8, 0.6]])
+
+# Getting the wav
+song = pygame.mixer.Sound("testes.wav") #use wav is best apparently
+
+# Rotation stuff
 xcnt = 0
 ycnt = 0
 zcnt = 0
-
 x_ax_x = y_ax_y = z_ax_z = 1.8
 x_ax_y = x_ax_z = y_ax_x = y_ax_z = z_ax_x = z_ax_y = 0
 
@@ -142,11 +151,42 @@ while running:
     a = Arrow3D(x1/n, y1/n, z1/n, mutation_scale=20,
             lw=1, arrowstyle="-|>", color='r')
     ax.add_artist(a)
+
+    #add points for the rhythm
+    for i in range(len(timing)):
+        if timing[i] - time < time_delay and time < timing[i]: #fade in
+#             plot point list[i] on bloch sphere with opacity = 1- (timing[i]-time)/time delay
+            
+            z1 = [0,-np.real(1-2*np.conj(list[i][0])*list[i][0])]
+            x1 = [0,2*(np.real(list[i][0])*np.real(list[i][1])+np.imag(list[i][0])*np.imag(list[i][1]))]
+            y1 = [0,2*(np.imag(list[i][0])*np.real(list[i][1])+np.real(list[i][0])*np.imag(list[i][1]))]
+            n = (x1[1]**2+y1[1]**2+z1[1]**2)**0.5
+            ax.scatter(x1,y1,z1, s=500, c='b', alpha = 1- (timing[i]-time)/time_delay)
+            #,alpha = 1- (timing[i]-time)/time_delay
+#             ax.add_artist(a)
+#             print(str(time)+"Yes")
+        elif time - timing[i] < time_delay_out and time > timing[i]: #fade out
+#             plot point list[i] on bloch sphere with opacity = 1- (time - timing[i])/time delay out
+
+            z1 = [0,-np.real(1-2*np.conj(list[i][0])*list[i][0])]
+            x1 = [0,2*(np.real(list[i][0])*np.real(list[i][1])+np.imag(list[i][0])*np.imag(list[i][1]))]
+            y1 = [0,2*(np.imag(list[i][0])*np.real(list[i][1])+np.real(list[i][0])*np.imag(list[i][1]))]
+            n = (x1[1]**2+y1[1]**2+z1[1]**2)**0.5
+            ax.scatter(x1,y1,z1, s=500, c='b',alpha = 1- (time - timing[i])/time_delay_out)
+#             print(str(time)+"No")
+        else:
+            continue
+
     plt.savefig('bloch.tiff')
     #     A = plot_bloch_multivector(statevector)
     #     A.savefig('bloch.png')
     surf = pygame.image.load("bloch.tiff")
     screen.blit(surf,(0,0))
+
+    font = pygame.font.SysFont('comicsans', 30, True)
+    timetext = font.render("Time: " + str(time), 1, (0,0,0)) 
+    screen.blit(timetext, (200, 0))
+
     pygame.display.flip()
     
     clock.tick(30)
