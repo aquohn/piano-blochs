@@ -152,7 +152,6 @@ while running:
                     sv_arr[1-int(key)] = 0
                 # Check if statevector coincides with point here
 
-
                 # OSU!!!
                 hit = 0 #check if there is a valid hit (no double counting)
                 for i in range(len(timing)): #find the closest beat timing[i] that is after current time, and the associated time diff
