@@ -132,7 +132,7 @@ while (end_it==False):
             end_it=True
     screen.blit(nlabel,(200,200))
     pygame.display.flip()
-
+time0 = int(pygame.time.get_ticks())
 while running:
     screen.fill((0, 0, 0))
     pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
