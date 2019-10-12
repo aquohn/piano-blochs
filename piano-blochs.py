@@ -18,38 +18,19 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from numpy import pi
 
-TURN_FRAMES = 4        
+TURN_FRAMES = 4
 B_FIELD = 0.01
 EASY = 10
 BPM = 119
+B_FIELD = 0.03
 SCREEN_WIDTH=640
 SCREEN_HEIGHT=650
 X_COLOR = "green"
 Y_COLOR = "orange"
 Z_COLOR = "blue"
-TAPZONE = np.array([[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]])
-xs,ys,zs = [],[],[]
 hit = 0
-
-def RandomEventGenerator(simulator):
-    global xs
-    global ys
-    global zs
-    rand = QuantumCircuit(6,6)
-    rand.h([0,1,2,3,4,5])
-    rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
-    counts = execute(rand,backend=simulator,shots=1).result().get_counts()
-    for key in counts:
-        a = key
-    b = [pos for pos, char in enumerate(a) if char == '1']
-    if len(b) == 0:
-        xs = TAPZONE[:][0]
-        ys = TAPZONE[:][1]
-        zs = TAPZONE[:][2]
-    else:
-        xs = np.array([TAPZONE[i][0] for i in b])
-        ys = np.array([TAPZONE[i][1] for i in b])
-        zs = np.array([TAPZONE[i][2] for i in b])
+TAPZONE = [[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
+xs,ys,zs = list(), list(), list()
 
 class Arrow3D(FancyArrowPatch):
 
@@ -83,8 +64,27 @@ time0 = int(pygame.time.get_ticks())
 #Song stuff:
 timing = [5000, 7000]
 list = np.array([[0.6,0.8], [-0.8, 0.6]])
-timing = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
-checklist=np.zeros(len(timing))
+note_time_arr = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
+checklist=np.zeros(len(note_time_arr))
+
+# Generate note distribution for each note
+rand = QuantumCircuit(6,6)
+rand.h([0,1,2,3,4,5])
+for j in range(len(note_time_arr)):
+    rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
+    counts = execute(rand,backend=simulator,shots=1).result().get_counts()
+    for key in counts:
+        a = key
+        b = [pos for pos, i in enumerate(key) if i == 1]
+        if len(b) == 0:
+            xs.append(TAPZONE[:][0])
+            ys.append(TAPZONE[:][1])
+            zs.append(TAPZONE[:][2])
+        else:
+            c = np.array([TAPZONE[i] for i in b])
+            xs.append(np.array([TAPZONE[i][0] for i in b]))
+            ys.append(np.array([TAPZONE[i][1] for i in b]))
+            zs.append(np.array([TAPZONE[i][2] for i in b]))
 
 combo=0
 combotext=str()
@@ -96,12 +96,29 @@ song = pygame.mixer.Sound("testes.wav") #use wav is best apparently
 pygame.mixer.music.load('testes.wav')
 
 
+MAXSCORE = 1000000
+SCORE_PER_NOTE = MAXSCORE/len(note_time_arr)
+
 # Rotation stuff
 xcnt = 0
 ycnt = 0
 zcnt = 0
 x_ax_x = y_ax_y = z_ax_z = 1.8
 x_ax_y = x_ax_z = y_ax_x = y_ax_z = z_ax_x = z_ax_y = 0
+rot = 0.5
+rotfactor = 1
+theta = pi / TURN_FRAMES
+
+# 3D rotation matrices
+rotX = np.array([[1, 0, 0],
+                [0, np.cos(theta), np.sin(theta)],
+                [0, -np.sin(theta), np.cos(theta)]])
+rotY = np.array([[np.cos(theta), 0, -np.sin(theta)],
+                [0, 1, 0],
+                [np.sin(theta), 0, np.cos(theta)]])
+rotZ = np.array([[np.cos(theta), np.sin(theta), 0],
+                [-np.sin(theta), np.cos(theta), 0],
+                [0, 0, 1]])
 
 # Start screen
 black=(0,0,0)
@@ -127,7 +144,7 @@ while running:
     sv_arr = sv_arr/((abs(sv_arr[0]))**2+(abs(sv_arr[1]))**2)**0.5
     circuit.initialize(sv_arr, 0)
 
-    circuit.u3(0,0,0.5,0)
+    circuit.u3(0,0,rot*rotfactor,0)
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
@@ -148,6 +165,49 @@ while running:
                     sv_arr[1-int(key)] = 0
                 hit = 1
 
+                # Check if statevector coincides with point here
+
+                # OSU!!!
+                hit = 0 #check if there is a valid hit (no double counting)
+                for i in range(len(note_time_arr)): #find the closest beat note_time_arr[i] that is after current time, and the associated time diff
+                    if note_time_arr[i] > time: #check that the note is later than current time
+                        if note_time_arr[i] - time > time - note_time_arr[i-1]:
+                            time_diff = time - note_time_arr[i-1] #late for the i-1 the note
+                            if checklist[i-1] == 1: #check if note is already played
+                                break
+                            else:
+                                checklist[i-1] = 1
+                                hit = 1
+                        else:
+                            time_diff = note_time_arr[i] - time #early for the ith note
+                            if checklist[i] == 1: #check if note is already played
+                                break
+                            else:
+                                checklist[i] = 1
+                                hit = 1
+                    elif note_time_arr[i] == note_time_arr[-1]: #accounting for last note
+                        time_diff = time - note_time_arr[i] #late for the last note
+                        if checklist[i] == 1: #check if note is already played
+                            break
+                        else:
+                            checklist[i] = 1
+                            hit = 1
+                            
+                if hit == 1:
+                    #measure state, return probability of getting point? +z? as probability
+                    if abs(time_diff) > 1000: #if note_time_arr is early
+                        combo = 0
+                        combotext = "MISS!"
+                    elif int(key)==1:  # (1/(1+time_diff) * probability)<0.5:
+                        combo = 0
+                        combotext = "MISS!"
+                    else:
+                        combo += 1
+                        score += 1/(1+time_diff)*SCORE_PER_NOTE
+                        combotext = str(combo)
+                else:
+                    combo = 0
+                    combotext = "MISS!"
         elif event.type == QUIT:
             running = False
 
@@ -175,14 +235,59 @@ while running:
         np.delete(timing,0)
         hit = 0
     
+    # Rotation
     if xcnt > 0:
-        circuit.rx(pi / TURN_FRAMES, 0)
+        # axis rotation
+        x_ax_arr = np.matmul(rotX, np.array([x_ax_x, x_ax_y, x_ax_z]))
+        y_ax_arr = np.matmul(rotX, np.array([y_ax_x, y_ax_y, y_ax_z]))
+        z_ax_arr = np.matmul(rotX, np.array([z_ax_x, z_ax_y, z_ax_z]))
+
+        x_ax_y = x_ax_arr[1]
+        x_ax_z = x_ax_arr[2]
+        y_ax_y = y_ax_arr[1]
+        y_ax_z = y_ax_arr[2]
+        z_ax_y = z_ax_arr[1]
+        z_ax_z = z_ax_arr[2]
+        
+        # state vector rotation
+        circuit.rx(theta, 0)
+
         xcnt -= 1 
+
     if ycnt > 0:
-        circuit.ry(pi / TURN_FRAMES, 0)
+        # axis rotation
+        x_ax_arr = np.matmul(rotY, np.array([x_ax_x, x_ax_y, x_ax_z]))
+        y_ax_arr = np.matmul(rotY, np.array([y_ax_x, y_ax_y, y_ax_z]))
+        z_ax_arr = np.matmul(rotY, np.array([z_ax_x, z_ax_y, z_ax_z]))
+
+        x_ax_x = x_ax_arr[0]
+        x_ax_z = x_ax_arr[2]
+        y_ax_x = y_ax_arr[0]
+        y_ax_z = y_ax_arr[2]
+        z_ax_x = z_ax_arr[0]
+        z_ax_z = z_ax_arr[2]
+
+        # state vector rotation
+        circuit.ry(theta, 0)
+
         ycnt -= 1
+
     if zcnt > 0:
-        circuit.rz(pi / TURN_FRAMES, 0)
+        # axis rotation
+        x_ax_arr = np.matmul(rotZ, np.array([x_ax_x, x_ax_y, x_ax_z]))
+        y_ax_arr = np.matmul(rotZ, np.array([y_ax_x, y_ax_y, y_ax_z]))
+        z_ax_arr = np.matmul(rotZ, np.array([z_ax_x, z_ax_y, z_ax_z]))
+
+        x_ax_x = x_ax_arr[0]
+        x_ax_y = x_ax_arr[1]
+        y_ax_x = y_ax_arr[0]
+        y_ax_y = y_ax_arr[1]
+        z_ax_x = z_ax_arr[0]
+        z_ax_y = z_ax_arr[1]
+
+        # state vector rotation
+        circuit.rz(theta, 0)
+
         zcnt -= 1
     
     fig = plt.figure(figsize=(10,10))
@@ -222,6 +327,7 @@ while running:
     result = execute(circuit, backend = simulator).result()
     sv_arr = result.get_statevector()
     z1 = [0,-np.real(1-2*np.conj(sv_arr[0])*sv_arr[0])]
+    rotfactor = abs(z1[1]) + 0.05
     x1 = [0,2*(np.real(sv_arr[0])*np.real(sv_arr[1])+np.imag(sv_arr[0])*np.imag(sv_arr[1]))]
     y1 = [0,2*(np.imag(sv_arr[0])*np.real(sv_arr[1])+np.real(sv_arr[0])*np.imag(sv_arr[1]))]
     n = (x1[1]**2+y1[1]**2+z1[1]**2)**0.5
@@ -230,30 +336,19 @@ while running:
     ax.add_artist(a)
 
     #add points for the rhythm
-    for i in range(len(timing)):
-        if timing[i] - time < time_delay and time < timing[i]: #fade in
-#             plot point list[i] on bloch sphere with opacity = 1- (timing[i]-time)/time delay
-            
-            z1 = [0,-np.real(1-2*np.conj(list[i][0])*list[i][0])]
-            x1 = [0,2*(np.real(list[i][0])*np.real(list[i][1])+np.imag(list[i][0])*np.imag(list[i][1]))]
-            y1 = [0,2*(np.imag(list[i][0])*np.real(list[i][1])+np.real(list[i][0])*np.imag(list[i][1]))]
-            n = (x1[1]**2+y1[1]**2+z1[1]**2)**0.5
-            ax.scatter(x1,y1,z1, s=500, c='b', alpha = 1- (timing[i]-time)/time_delay)
-            #,alpha = 1- (timing[i]-time)/time_delay
+    for i in range(len(note_time_arr)):
+        if note_time_arr[i] - time < time_delay and time < note_time_arr[i]: #fade in
+#             plot point list[i] on bloch sphere with opacity = 1- (note_time_arr[i]-time)/time delay
+            ax.scatter(xs[i],ys[i],zs[i], s=200, color=(0.5,0,1,1-(note_time_arr[i]-time)/time_delay)) 
+            #,alpha = 1- (note_time_arr[i]-time)/time_delay
 #             ax.add_artist(a)
 #             print(str(time)+"Yes")
-        elif time - timing[i] < time_delay_out and time > timing[i]: #fade out
-#             plot point list[i] on bloch sphere with opacity = 1- (time - timing[i])/time delay out
-
-            z1 = [0,-np.real(1-2*np.conj(list[i][0])*list[i][0])]
-            x1 = [0,2*(np.real(list[i][0])*np.real(list[i][1])+np.imag(list[i][0])*np.imag(list[i][1]))]
-            y1 = [0,2*(np.imag(list[i][0])*np.real(list[i][1])+np.real(list[i][0])*np.imag(list[i][1]))]
-            n = (x1[1]**2+y1[1]**2+z1[1]**2)**0.5
-            ax.scatter(x1,y1,z1, s=500, c='b',alpha = 1- (time - timing[i])/time_delay_out)
+        elif time - note_time_arr[i] < time_delay_out and time > note_time_arr[i]: #fade out
+#             plot point list[i] on bloch sphere with opacity = 1- (time - note_time_arr[i])/time delay out
+            ax.scatter(xs[i],ys[i],zs[i], s=200, color=(0.5,0,1,1- (time - note_time_arr[i])/time_delay_out)) 
 #             print(str(time)+"No")
         else:
             continue
-    RandomEventGenerator(simulator)
 #    if timing[0] - time < time_delay and time < timing[0]: #fade in
 #        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(timing[0]-time)/time_delay))
 #    elif time - timing[0] < time_delay_out and time > timing[0]: #fade out
@@ -267,7 +362,10 @@ while running:
 
     font = pygame.font.SysFont('comicsans', 30, True)
     timetext = font.render("Time: " + str(time), 1, (0,0,0)) 
-    screen.blit(timetext, (200, 0))
+    combotext2 = font.render("Combo: " + str(combotext), 1, (0,0,0))
+    #scoretext = font.render()
+    screen.blit(timetext, (0, 0))
+    screen.blit(combotext2, (200, 0))
 
     pygame.display.flip()
     
