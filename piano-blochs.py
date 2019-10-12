@@ -28,29 +28,13 @@ X_COLOR = "green"
 Y_COLOR = "orange"
 Z_COLOR = "blue"
 TAPZONE = [[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
-xs,ys,zs = [],[],[]
+xs,ys,zs = list(), list(), list()
 
 def RandomEventGenerator(simulator):
     global xs
     global ys
     global zs
-    '''rand = QuantumCircuit(6,6)
-    rand.h([0,1,2,3,4,5])
-    rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
-    counts = execute(rand,backend=simulator,shots=1).result().get_counts()
-    for key in counts:
-        a = key'''
-    a = np.random.randint(0,1,6)
-    b = [pos for pos, i in enumerate(a) if i == 1]
-    if len(b) == 0:
-        xs = TAPZONE[:][0]
-        ys = TAPZONE[:][1]
-        zs = TAPZONE[:][2]
-    else:
-        c = np.array([TAPZONE[i] for i in b])
-        xs = np.array([TAPZONE[i][0] for i in b])
-        ys = np.array([TAPZONE[i][1] for i in b])
-        zs = np.array([TAPZONE[i][2] for i in b])
+    
 
 class Arrow3D(FancyArrowPatch):
 
@@ -83,9 +67,26 @@ time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
 note_time_arr = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
-#list = np.array([[1,0], [1, 0]])
-
 checklist=np.zeros(len(note_time_arr))
+
+# Generate note distribution for each note
+rand = QuantumCircuit(6,6)
+rand.h([0,1,2,3,4,5])
+for i in range(len(note_time_arr)):
+    rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
+    counts = execute(rand,backend=simulator,shots=1).result().get_counts()
+    for key in counts:
+        a = key
+        b = [pos for pos, i in enumerate(key) if i == 1]
+        if len(b) == 0:
+            xs = TAPZONE[:][0]
+            ys = TAPZONE[:][1]
+            zs = TAPZONE[:][2]
+        else:
+            c = np.array([TAPZONE[i] for i in b])
+            xs.append(np.array([TAPZONE[i][0] for i in b]))
+            ys.append(np.array([TAPZONE[i][1] for i in b]))
+            zs.append(np.array([TAPZONE[i][2] for i in b]))
 
 combo=0
 combotext=str()
@@ -189,7 +190,7 @@ while running:
                         combotext = "MISS!"
                     else:
                         combo += 1
-                        score += 1/(1+time_diff)*NOTE_SCORE
+                        score += 1/(1+time_diff)*SCORE_PER_NOTE
                         combotext = str(combo)
                 else:
                     combo = 0
@@ -300,16 +301,15 @@ while running:
 
     #add points for the rhythm
     for i in range(len(note_time_arr)):
-        RandomEventGenerator(simulator)
         if note_time_arr[i] - time < time_delay and time < note_time_arr[i]: #fade in
 #             plot point list[i] on bloch sphere with opacity = 1- (note_time_arr[i]-time)/time delay
-            ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1-(note_time_arr[i]-time)/time_delay)) 
+            ax.scatter(xs[i],ys[i],zs[i], s=200, color=(0.5,0,1,1-(note_time_arr[i]-time)/time_delay)) 
             #,alpha = 1- (note_time_arr[i]-time)/time_delay
 #             ax.add_artist(a)
 #             print(str(time)+"Yes")
         elif time - note_time_arr[i] < time_delay_out and time > note_time_arr[i]: #fade out
 #             plot point list[i] on bloch sphere with opacity = 1- (time - note_time_arr[i])/time delay out
-            ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1- (time - note_time_arr[i])/time_delay_out)) 
+            ax.scatter(xs[i],ys[i],zs[i], s=200, color=(0.5,0,1,1- (time - note_time_arr[i])/time_delay_out)) 
 #             print(str(time)+"No")
         else:
             continue
