@@ -20,11 +20,36 @@ from numpy import pi
 
 TURN_FRAMES = 4        
 B_FIELD = 0.001
+EASY = 10
+BPM = 119
 SCREEN_WIDTH=640
 SCREEN_HEIGHT=650
 X_COLOR = "green"
 Y_COLOR = "orange"
 Z_COLOR = "blue"
+TAPZONE = [[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
+xs,ys,zs = [],[],[]
+
+def RandomEventGenerator(simulator):
+    global xs
+    global ys
+    global zs
+    rand = QuantumCircuit(6,6)
+    rand.h([0,1,2,3,4,5])
+    rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
+    counts = execute(rand,backend=simulator,shots=1).result().get_counts()
+    for key in counts:
+        a = key
+    b = [pos for pos, char in enumerate(a) if char == '1']
+    if len(b) == 0:
+        xs = TAPZONE[:][0]
+        ys = TAPZONE[:][1]
+        zs = TAPZONE[:][2]
+    else:
+        c = np.array([TAPZONE[i] for i in b])
+        xs = np.array([TAPZONE[i][0] for i in b])
+        ys = np.array([TAPZONE[i][1] for i in b])
+        zs = np.array([TAPZONE[i][2] for i in b])
 
 class Arrow3D(FancyArrowPatch):
 
@@ -56,10 +81,10 @@ time_delay_out = 1000
 time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
-timing = [5000, 7000]
-list = np.array([[1,0], [1, 0]])
+timing = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
+#list = np.array([[1,0], [1, 0]])
 
-checklist=np.zeros(len(list))
+checklist=np.zeros(len(timing))
 
 combo=0
 combotext=str()
@@ -72,7 +97,7 @@ pygame.mixer.music.load('testes.wav')
 pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
 
 maxscore = 1000000
-score_per_note = maxscore/len(list)
+score_per_note = maxscore/len(timing)
 
 # Rotation stuff
 xcnt = 0
@@ -142,20 +167,16 @@ while running:
                 if hit == 1:
                     #measure state, return probability of getting point? +z? as probability
 
-                    if time_diff < time+500: #if timing is early
+                    if abs(time_diff) > 1000: #if timing is early
                         combo = 0
                         combotext = "MISS!"
-                    elif time_diff > time-500: #if timing is late
+                    elif int(key)==1:  # (1/(1+time_diff) * probability)<0.5:
                         combo = 0
                         combotext = "MISS!"
-                    else: 
-                        if int(key) == 0: # (1/(1+time_diff) * probability)<0.5:
-                            combo = 0
-                            combotext = "MISS!"
-                        else:
-                            combo += 1
-                            score += 1/(1+time_diff)*score_per_note
-                            combotext = str(combo)
+                    else:
+                        combo += 1
+                        score += 1/(1+time_diff)*score_per_note
+                        combotext = str(combo)
                 else:
                     combo = 0
                     combotext = "MISS!"
@@ -224,25 +245,16 @@ while running:
 
     #add points for the rhythm
     for i in range(len(timing)):
+        RandomEventGenerator(simulator)
         if timing[i] - time < time_delay and time < timing[i]: #fade in
 #             plot point list[i] on bloch sphere with opacity = 1- (timing[i]-time)/time delay
-            
-            z1 = [0,-np.real(1-2*np.conj(list[i][0])*list[i][0])]
-            x1 = [0,2*(np.real(list[i][0])*np.real(list[i][1])+np.imag(list[i][0])*np.imag(list[i][1]))]
-            y1 = [0,2*(np.imag(list[i][0])*np.real(list[i][1])+np.real(list[i][0])*np.imag(list[i][1]))]
-            n = (x1[1]**2+y1[1]**2+z1[1]**2)**0.5
-            ax.scatter(x1,y1,z1, s=500, c='b', alpha = 1- (timing[i]-time)/time_delay)
+            ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1-(timing[i]-time)/time_delay)) 
             #,alpha = 1- (timing[i]-time)/time_delay
 #             ax.add_artist(a)
 #             print(str(time)+"Yes")
         elif time - timing[i] < time_delay_out and time > timing[i]: #fade out
 #             plot point list[i] on bloch sphere with opacity = 1- (time - timing[i])/time delay out
-
-            z1 = [0,-np.real(1-2*np.conj(list[i][0])*list[i][0])]
-            x1 = [0,2*(np.real(list[i][0])*np.real(list[i][1])+np.imag(list[i][0])*np.imag(list[i][1]))]
-            y1 = [0,2*(np.imag(list[i][0])*np.real(list[i][1])+np.real(list[i][0])*np.imag(list[i][1]))]
-            n = (x1[1]**2+y1[1]**2+z1[1]**2)**0.5
-            ax.scatter(x1,y1,z1, s=500, c='b',alpha = 1- (time - timing[i])/time_delay_out)
+            ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1- (time - timing[i])/time_delay_out)) 
 #             print(str(time)+"No")
         else:
             continue
