@@ -18,7 +18,8 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from numpy import pi
 
-TURN_FRAMES = 4        
+TURN_FRAMES = 4
+B_FIELD = 0.01
 EASY = 10
 BPM = 119
 B_FIELD = 0.03
@@ -27,29 +28,9 @@ SCREEN_HEIGHT=650
 X_COLOR = "green"
 Y_COLOR = "orange"
 Z_COLOR = "blue"
+hit = 0
 TAPZONE = [[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
-xs,ys,zs = [],[],[]
-
-def RandomEventGenerator(simulator):
-    global xs
-    global ys
-    global zs
-    rand = QuantumCircuit(6,6)
-    rand.h([0,1,2,3,4,5])
-    rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
-    counts = execute(rand,backend=simulator,shots=1).result().get_counts()
-    for key in counts:
-        a = key
-    b = [pos for pos, char in enumerate(a) if char == '1']
-    if len(b) == 0:
-        xs = TAPZONE[:][0]
-        ys = TAPZONE[:][1]
-        zs = TAPZONE[:][2]
-    else:
-        c = np.array([TAPZONE[i] for i in b])
-        xs = np.array([TAPZONE[i][0] for i in b])
-        ys = np.array([TAPZONE[i][1] for i in b])
-        zs = np.array([TAPZONE[i][2] for i in b])
+xs,ys,zs = list(), list(), list()
 
 class Arrow3D(FancyArrowPatch):
 
@@ -64,7 +45,7 @@ class Arrow3D(FancyArrowPatch):
         FancyArrowPatch.draw(self, renderer)
 
 pygame.init()
-
+myname = input('What is your name?')
 sv_arr = np.array([1,0])
 z1 = [0,1]
 circuit = QuantumCircuit(1,1) #1 qubit and 1 classical bit
@@ -81,10 +62,29 @@ time_delay_out = 1000
 time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
-timing = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
-#list = np.array([[1,0], [1, 0]])
+timing = [5000, 7000]
+list = np.array([[0.6,0.8], [-0.8, 0.6]])
+note_time_arr = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
+checklist=np.zeros(len(note_time_arr))
 
-checklist=np.zeros(len(timing))
+# Generate note distribution for each note
+rand = QuantumCircuit(6,6)
+rand.h([0,1,2,3,4,5])
+for j in range(len(note_time_arr)):
+    rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
+    counts = execute(rand,backend=simulator,shots=1).result().get_counts()
+    for key in counts:
+        a = key
+        b = [pos for pos, i in enumerate(key) if i == 1]
+        if len(b) == 0:
+            xs.append(TAPZONE[:][0])
+            ys.append(TAPZONE[:][1])
+            zs.append(TAPZONE[:][2])
+        else:
+            c = np.array([TAPZONE[i] for i in b])
+            xs.append(np.array([TAPZONE[i][0] for i in b]))
+            ys.append(np.array([TAPZONE[i][1] for i in b]))
+            zs.append(np.array([TAPZONE[i][2] for i in b]))
 
 combo=0
 combotext=str()
@@ -94,10 +94,10 @@ score = 0
 song = pygame.mixer.Sound("testes.wav") #use wav is best apparently
 
 pygame.mixer.music.load('testes.wav')
-pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
 
-maxscore = 1000000
-score_per_note = maxscore/len(timing)
+
+MAXSCORE = 1000000
+SCORE_PER_NOTE = MAXSCORE/len(note_time_arr)
 
 # Rotation stuff
 xcnt = 0
@@ -120,9 +120,22 @@ rotZ = np.array([[np.cos(theta), np.sin(theta), 0],
                 [-np.sin(theta), np.cos(theta), 0],
                 [0, 0, 1]])
 
+# Start screen
+black=(0,0,0)
+end_it=False
+while (end_it==False):
+    screen.fill(black)
+    myfont=pygame.font.SysFont("Britannic Bold", 40)
+    nlabel=myfont.render("Welcome "+myname+" Start Screen", 1, (255, 0, 0))
+    for event in pygame.event.get():
+        if event.type==MOUSEBUTTONDOWN:
+            end_it=True
+    screen.blit(nlabel,(200,200))
+    pygame.display.flip()
+time0 = int(pygame.time.get_ticks())
 while running:
     screen.fill((0, 0, 0))
-    
+    pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
     time = int(pygame.time.get_ticks())-time0
     
     # Initialization
@@ -150,38 +163,39 @@ while running:
                 for key in counts:
                     sv_arr[int(key)] = 1
                     sv_arr[1-int(key)] = 0
-                # Check if statevector coincides with point here
+                hit = 1
 
+                # Check if statevector coincides with point here
 
                 # OSU!!!
                 hit = 0 #check if there is a valid hit (no double counting)
-                for i in range(len(timing)): #find the closest beat timing[i] that is after current time, and the associated time diff
-                    if timing[i] > time: #check that the note is later than current time
-                        if timing[i]- time > time - timing[i-1]:
-                            time_diff = time - timing[i-1] #late for the i-1 the note
+                for i in range(len(note_time_arr)): #find the closest beat note_time_arr[i] that is after current time, and the associated time diff
+                    if note_time_arr[i] > time: #check that the note is later than current time
+                        if note_time_arr[i] - time > time - note_time_arr[i-1]:
+                            time_diff = time - note_time_arr[i-1] #late for the i-1 the note
                             if checklist[i-1] == 1: #check if note is already played
                                 break
                             else:
                                 checklist[i-1] = 1
                                 hit = 1
                         else:
-                            time_diff = timing[i] - time #early for the ith note
+                            time_diff = note_time_arr[i] - time #early for the ith note
                             if checklist[i] == 1: #check if note is already played
                                 break
                             else:
                                 checklist[i] = 1
                                 hit = 1
-                    elif timing[i] == timing[-1]: #accounting for last note
-                        time_diff = time - timing[i] #late for the last note
+                    elif note_time_arr[i] == note_time_arr[-1]: #accounting for last note
+                        time_diff = time - note_time_arr[i] #late for the last note
                         if checklist[i] == 1: #check if note is already played
                             break
                         else:
                             checklist[i] = 1
                             hit = 1
+                            
                 if hit == 1:
                     #measure state, return probability of getting point? +z? as probability
-
-                    if abs(time_diff) > 1000: #if timing is early
+                    if abs(time_diff) > 1000: #if note_time_arr is early
                         combo = 0
                         combotext = "MISS!"
                     elif int(key)==1:  # (1/(1+time_diff) * probability)<0.5:
@@ -189,19 +203,37 @@ while running:
                         combotext = "MISS!"
                     else:
                         combo += 1
-                        score += 1/(1+time_diff)*score_per_note
+                        score += 1/(1+time_diff)*SCORE_PER_NOTE
                         combotext = str(combo)
                 else:
                     combo = 0
                     combotext = "MISS!"
-
         elif event.type == QUIT:
             running = False
 
-
-
-#        elif event.type == QUIT:
-#            running = False
+    if hit == 1 and time < timing[0] - 1000:
+        continue
+    elif hit == 0 and time > timing[0] + 1000:
+        combo = 0
+        combotext = "MISS!"
+        np.delete(timing,0)
+    elif hit == 1 and abs(time - timing[0]) < 500 and 1-int(key) in zs:
+        combo += 1
+        combotext = "PERFECT!"
+        score += 1/(1+abs(time-timing[0]))*score_per_note
+        np.delete(timing,0)
+        hit = 0
+    elif hit == 1 and abs(time - timing[0]) < 1000 and 1-int(key) in zs:
+        combo += 1
+        combotext = "GREAT!"
+        score += 1/(1+abs(time-timing[0]))*score_per_note
+        np.delete(timing,0)
+        hit = 0
+    elif hit == 1 and abs(time - timing[0]) < 1000 and 1-int(key) not in zs:
+        combo = 0
+        combotext = "MISS!"
+        np.delete(timing,0)
+        hit = 0
     
     # Rotation
     if xcnt > 0:
@@ -218,7 +250,7 @@ while running:
         z_ax_z = z_ax_arr[2]
         
         # state vector rotation
-        circuit.rx(pi / TURN_FRAMES, 0)
+        circuit.rx(theta, 0)
 
         xcnt -= 1 
 
@@ -236,7 +268,7 @@ while running:
         z_ax_z = z_ax_arr[2]
 
         # state vector rotation
-        circuit.ry(pi / TURN_FRAMES, 0)
+        circuit.ry(theta, 0)
 
         ycnt -= 1
 
@@ -254,7 +286,7 @@ while running:
         z_ax_y = z_ax_arr[1]
 
         # state vector rotation
-        circuit.rz(pi / TURN_FRAMES, 0)
+        circuit.rz(theta, 0)
 
         zcnt -= 1
     
@@ -304,24 +336,27 @@ while running:
     ax.add_artist(a)
 
     #add points for the rhythm
-    for i in range(len(timing)):
-        RandomEventGenerator(simulator)
-        if timing[i] - time < time_delay and time < timing[i]: #fade in
-#             plot point list[i] on bloch sphere with opacity = 1- (timing[i]-time)/time delay
-            ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1-(timing[i]-time)/time_delay)) 
-            #,alpha = 1- (timing[i]-time)/time_delay
+    for i in range(len(note_time_arr)):
+        if note_time_arr[i] - time < time_delay and time < note_time_arr[i]: #fade in
+#             plot point list[i] on bloch sphere with opacity = 1- (note_time_arr[i]-time)/time delay
+            ax.scatter(xs[i],ys[i],zs[i], s=200, color=(0.5,0,1,1-(note_time_arr[i]-time)/time_delay)) 
+            #,alpha = 1- (note_time_arr[i]-time)/time_delay
 #             ax.add_artist(a)
 #             print(str(time)+"Yes")
-        elif time - timing[i] < time_delay_out and time > timing[i]: #fade out
-#             plot point list[i] on bloch sphere with opacity = 1- (time - timing[i])/time delay out
-            ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1- (time - timing[i])/time_delay_out)) 
+        elif time - note_time_arr[i] < time_delay_out and time > note_time_arr[i]: #fade out
+#             plot point list[i] on bloch sphere with opacity = 1- (time - note_time_arr[i])/time delay out
+            ax.scatter(xs[i],ys[i],zs[i], s=200, color=(0.5,0,1,1- (time - note_time_arr[i])/time_delay_out)) 
 #             print(str(time)+"No")
         else:
             continue
+#    if timing[0] - time < time_delay and time < timing[0]: #fade in
+#        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(timing[0]-time)/time_delay))
+#    elif time - timing[0] < time_delay_out and time > timing[0]: #fade out
+#        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(time-timing[0])/time_delay_out))
+#    else:
+#        continue
 
     plt.savefig('bloch.tiff')
-    #     A = plot_bloch_multivector(statevector)
-    #     A.savefig('bloch.png')
     surf = pygame.image.load("bloch.tiff")
     screen.blit(surf,(0,0))
 
