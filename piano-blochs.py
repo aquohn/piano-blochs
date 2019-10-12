@@ -73,6 +73,18 @@ x_ax_x = y_ax_y = z_ax_z = 1.8
 x_ax_y = x_ax_z = y_ax_x = y_ax_z = z_ax_x = z_ax_y = 0
 rot = 0.5
 rotfactor = 1
+theta = pi / TURN_FRAMES
+
+# 3D rotation matrices
+rotX = np.array([[1, 0, 0],
+                [0, np.cos(theta), np.sin(theta)],
+                [0, -np.sin(theta), np.cos(theta)]])
+rotY = np.array([[np.cos(theta), 0, -np.sin(theta)],
+                [0, 1, 0],
+                [np.sin(theta), 0, np.cos(theta)]])
+rotZ = np.array([[np.cos(theta), np.sin(theta), 0],
+                [-np.sin(theta), np.cos(theta), 0],
+                [0, 0, 1]])
 
 while running:
     screen.fill((0, 0, 0))
@@ -109,14 +121,59 @@ while running:
         elif event.type == QUIT:
             running = False
     
+    # Rotation
     if xcnt > 0:
+        # axis rotation
+        x_ax_arr = np.matmul(rotX, np.array([x_ax_x, x_ax_y, x_ax_z]))
+        y_ax_arr = np.matmul(rotX, np.array([y_ax_x, y_ax_y, y_ax_z]))
+        z_ax_arr = np.matmul(rotX, np.array([z_ax_x, z_ax_y, z_ax_z]))
+
+        x_ax_y = x_ax_arr[1]
+        x_ax_z = x_ax_arr[2]
+        y_ax_y = y_ax_arr[1]
+        y_ax_z = y_ax_arr[2]
+        z_ax_y = z_ax_arr[1]
+        z_ax_z = z_ax_arr[2]
+        
+        # state vector rotation
         circuit.rx(pi / TURN_FRAMES, 0)
+
         xcnt -= 1 
+
     if ycnt > 0:
+        # axis rotation
+        x_ax_arr = np.matmul(rotY, np.array([x_ax_x, x_ax_y, x_ax_z]))
+        y_ax_arr = np.matmul(rotY, np.array([y_ax_x, y_ax_y, y_ax_z]))
+        z_ax_arr = np.matmul(rotY, np.array([z_ax_x, z_ax_y, z_ax_z]))
+
+        x_ax_x = x_ax_arr[0]
+        x_ax_z = x_ax_arr[2]
+        y_ax_x = y_ax_arr[0]
+        y_ax_z = y_ax_arr[2]
+        z_ax_x = z_ax_arr[0]
+        z_ax_z = z_ax_arr[2]
+
+        # state vector rotation
         circuit.ry(pi / TURN_FRAMES, 0)
+
         ycnt -= 1
+
     if zcnt > 0:
+        # axis rotation
+        x_ax_arr = np.matmul(rotZ, np.array([x_ax_x, x_ax_y, x_ax_z]))
+        y_ax_arr = np.matmul(rotZ, np.array([y_ax_x, y_ax_y, y_ax_z]))
+        z_ax_arr = np.matmul(rotZ, np.array([z_ax_x, z_ax_y, z_ax_z]))
+
+        x_ax_x = x_ax_arr[0]
+        x_ax_y = x_ax_arr[1]
+        y_ax_x = y_ax_arr[0]
+        y_ax_y = y_ax_arr[1]
+        z_ax_x = z_ax_arr[0]
+        z_ax_y = z_ax_arr[1]
+
+        # state vector rotation
         circuit.rz(pi / TURN_FRAMES, 0)
+
         zcnt -= 1
     
     fig = plt.figure(figsize=(10,10))
