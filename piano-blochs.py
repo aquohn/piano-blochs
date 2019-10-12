@@ -32,6 +32,7 @@ Z_COLOR = "blue"
 hit = 0
 TAPZONE = [[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
 x, y, z = 0, 0, 0
+lock = False
 
 class Arrow3D(FancyArrowPatch):
 
@@ -132,14 +133,19 @@ while running:
     circuit.u3(0,0,rot*rotfactor,0)
     for event in pygame.event.get():
         if event.type == KEYDOWN:
+            if not lock:
+                lock = True
+                if event.key == K_a:
+                    xcnt += TURN_FRAMES
+                elif event.key == K_s:
+                    ycnt += TURN_FRAMES
+                elif event.key == K_d:
+                    zcnt += TURN_FRAMES
+                else:
+                    lock = False
+            
             if event.key == K_ESCAPE:
                 running = False
-            elif event.key == K_a:
-                xcnt += TURN_FRAMES
-            elif event.key == K_s:
-                ycnt += TURN_FRAMES
-            elif event.key == K_d:
-                zcnt += TURN_FRAMES
             elif event.key == K_RETURN:
                 circuit.measure([0],[0])
                 backend = Aer.get_backend('qasm_simulator')
@@ -179,6 +185,7 @@ while running:
     
     # Rotation
     if xcnt > 0:
+        assert(lock == True)
         # axis rotation
         x_ax_arr = np.matmul(rotX, np.array([x_ax_x, x_ax_y, x_ax_z]))
         y_ax_arr = np.matmul(rotX, np.array([y_ax_x, y_ax_y, y_ax_z]))
@@ -197,6 +204,7 @@ while running:
         xcnt -= 1 
 
     if ycnt > 0:
+        assert(lock == True)
         # axis rotation
         x_ax_arr = np.matmul(rotY, np.array([x_ax_x, x_ax_y, x_ax_z]))
         y_ax_arr = np.matmul(rotY, np.array([y_ax_x, y_ax_y, y_ax_z]))
@@ -215,6 +223,7 @@ while running:
         ycnt -= 1
 
     if zcnt > 0:
+        assert(lock == True)
         # axis rotation
         x_ax_arr = np.matmul(rotZ, np.array([x_ax_x, x_ax_y, x_ax_z]))
         y_ax_arr = np.matmul(rotZ, np.array([y_ax_x, y_ax_y, y_ax_z]))
@@ -231,6 +240,9 @@ while running:
         circuit.rz(theta, 0)
 
         zcnt -= 1
+    
+    if (xcnt == ycnt == zcnt == 0):
+        lock = False
     
     fig = plt.figure(figsize=(10,10))
     ax = Axes3D(fig)
@@ -294,7 +306,7 @@ while running:
             ax.scatter(x,y,z, s=200, color=(0.5,0,1,1-(note_time_arr[i]-time)/time_delay)) 
 
         elif time - note_time_arr[i] < time_delay_out and time > note_time_arr[i]: #fade out
-#             plot point list[i] on bloch sphere with opacity = 1- (time - note_time_arr[i])/time delay out
+#             plot point list[i] on bloch sphere with opacity = 1- (time. - note_time_arr[i])/time delay out
             ax.scatter(x,y,z, s=200, color=(0.5,0,1,1- (time - note_time_arr[i])/time_delay_out)) 
 #             print(str(time)+"No")
         else:
@@ -306,10 +318,11 @@ while running:
 
     font = pygame.font.SysFont('comicsans', 30, True)
     timetext = font.render("Time: " + str(time), 1, (0,0,0)) 
-    combotext2 = font.render("Combo: " + str(combotext), 1, (0,0,0))
-    #scoretext = font.render()
+    combohaha = font.render("Combo: " + str(combo), 1, (0,0,0))
+    combotext2 = font.render(str(combotext), 1, (0,0,0))
     screen.blit(timetext, (0, 0))
-    screen.blit(combotext2, (200, 0))
+    screen.blit(combohaha, (200, 0))
+    screen.blit(combotext2, (400, 0))
 
     pygame.display.flip()
     
