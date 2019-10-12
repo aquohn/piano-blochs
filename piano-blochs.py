@@ -19,7 +19,7 @@ from mpl_toolkits.mplot3d import proj3d
 from numpy import pi
 
 TURN_FRAMES = 4        
-B_FIELD = 0.01
+B_FIELD = 0.03
 SCREEN_WIDTH=640
 SCREEN_HEIGHT=650
 X_COLOR = "green"
@@ -71,6 +71,8 @@ ycnt = 0
 zcnt = 0
 x_ax_x = y_ax_y = z_ax_z = 1.8
 x_ax_y = x_ax_z = y_ax_x = y_ax_z = z_ax_x = z_ax_y = 0
+rot = 0.5
+rotfactor = 1
 
 while running:
     screen.fill((0, 0, 0))
@@ -83,7 +85,7 @@ while running:
     sv_arr = sv_arr/((abs(sv_arr[0]))**2+(abs(sv_arr[1]))**2)**0.5
     circuit.initialize(sv_arr, 0)
 
-    circuit.u3(0,0,0.5,0)
+    circuit.u3(0,0,rot*rotfactor,0)
     for event in pygame.event.get():
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
@@ -154,6 +156,7 @@ while running:
     result = execute(circuit, backend = simulator).result()
     sv_arr = result.get_statevector()
     z1 = [0,-np.real(1-2*np.conj(sv_arr[0])*sv_arr[0])]
+    rotfactor = abs(z1[1]) + 0.05
     x1 = [0,2*(np.real(sv_arr[0])*np.real(sv_arr[1])+np.imag(sv_arr[0])*np.imag(sv_arr[1]))]
     y1 = [0,2*(np.imag(sv_arr[0])*np.real(sv_arr[1])+np.real(sv_arr[0])*np.imag(sv_arr[1]))]
     n = (x1[1]**2+y1[1]**2+z1[1]**2)**0.5
