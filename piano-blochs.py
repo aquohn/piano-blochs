@@ -18,7 +18,8 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from numpy import pi
 
-TURN_FRAMES = 4        
+TURN_FRAMES = 4
+B_FIELD = 0.01
 EASY = 10
 BPM = 119
 B_FIELD = 0.03
@@ -27,14 +28,9 @@ SCREEN_HEIGHT=650
 X_COLOR = "green"
 Y_COLOR = "orange"
 Z_COLOR = "blue"
+hit = 0
 TAPZONE = [[1,0,0],[0,1,0],[0,0,1],[-1,0,0],[0,-1,0],[0,0,-1]]
 xs,ys,zs = list(), list(), list()
-
-def RandomEventGenerator(simulator):
-    global xs
-    global ys
-    global zs
-    
 
 class Arrow3D(FancyArrowPatch):
 
@@ -49,7 +45,7 @@ class Arrow3D(FancyArrowPatch):
         FancyArrowPatch.draw(self, renderer)
 
 pygame.init()
-
+myname = input('What is your name?')
 sv_arr = np.array([1,0])
 z1 = [0,1]
 circuit = QuantumCircuit(1,1) #1 qubit and 1 classical bit
@@ -66,22 +62,24 @@ time_delay_out = 1000
 time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
+timing = [5000, 7000]
+list = np.array([[0.6,0.8], [-0.8, 0.6]])
 note_time_arr = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
 checklist=np.zeros(len(note_time_arr))
 
 # Generate note distribution for each note
 rand = QuantumCircuit(6,6)
 rand.h([0,1,2,3,4,5])
-for i in range(len(note_time_arr)):
+for j in range(len(note_time_arr)):
     rand.measure([0,1,2,3,4,5],[0,1,2,3,4,5])
     counts = execute(rand,backend=simulator,shots=1).result().get_counts()
     for key in counts:
         a = key
         b = [pos for pos, i in enumerate(key) if i == 1]
         if len(b) == 0:
-            xs = TAPZONE[:][0]
-            ys = TAPZONE[:][1]
-            zs = TAPZONE[:][2]
+            xs.append(TAPZONE[:][0])
+            ys.append(TAPZONE[:][1])
+            zs.append(TAPZONE[:][2])
         else:
             c = np.array([TAPZONE[i] for i in b])
             xs.append(np.array([TAPZONE[i][0] for i in b]))
@@ -96,7 +94,7 @@ score = 0
 song = pygame.mixer.Sound("testes.wav") #use wav is best apparently
 
 pygame.mixer.music.load('testes.wav')
-pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
+
 
 MAXSCORE = 1000000
 SCORE_PER_NOTE = MAXSCORE/len(note_time_arr)
@@ -122,9 +120,22 @@ rotZ = np.array([[np.cos(theta), np.sin(theta), 0],
                 [-np.sin(theta), np.cos(theta), 0],
                 [0, 0, 1]])
 
+# Start screen
+black=(0,0,0)
+end_it=False
+while (end_it==False):
+    screen.fill(black)
+    myfont=pygame.font.SysFont("Britannic Bold", 40)
+    nlabel=myfont.render("Welcome "+myname+" Start Screen", 1, (255, 0, 0))
+    for event in pygame.event.get():
+        if event.type==MOUSEBUTTONDOWN:
+            end_it=True
+    screen.blit(nlabel,(200,200))
+    pygame.display.flip()
+time0 = int(pygame.time.get_ticks())
 while running:
     screen.fill((0, 0, 0))
-    
+    pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
     time = int(pygame.time.get_ticks())-time0
     
     # Initialization
@@ -152,6 +163,8 @@ while running:
                 for key in counts:
                     sv_arr[int(key)] = 1
                     sv_arr[1-int(key)] = 0
+                hit = 1
+
                 # Check if statevector coincides with point here
 
                 # OSU!!!
@@ -195,10 +208,33 @@ while running:
                 else:
                     combo = 0
                     combotext = "MISS!"
-
         elif event.type == QUIT:
             running = False
 
+    if hit == 1 and time < timing[0] - 1000:
+        continue
+    elif hit == 0 and time > timing[0] + 1000:
+        combo = 0
+        combotext = "MISS!"
+        np.delete(timing,0)
+    elif hit == 1 and abs(time - timing[0]) < 500 and 1-int(key) in zs:
+        combo += 1
+        combotext = "PERFECT!"
+        score += 1/(1+abs(time-timing[0]))*score_per_note
+        np.delete(timing,0)
+        hit = 0
+    elif hit == 1 and abs(time - timing[0]) < 1000 and 1-int(key) in zs:
+        combo += 1
+        combotext = "GREAT!"
+        score += 1/(1+abs(time-timing[0]))*score_per_note
+        np.delete(timing,0)
+        hit = 0
+    elif hit == 1 and abs(time - timing[0]) < 1000 and 1-int(key) not in zs:
+        combo = 0
+        combotext = "MISS!"
+        np.delete(timing,0)
+        hit = 0
+    
     # Rotation
     if xcnt > 0:
         # axis rotation
@@ -313,10 +349,14 @@ while running:
 #             print(str(time)+"No")
         else:
             continue
+#    if timing[0] - time < time_delay and time < timing[0]: #fade in
+#        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(timing[0]-time)/time_delay))
+#    elif time - timing[0] < time_delay_out and time > timing[0]: #fade out
+#        ax.scatter(xs,ys,zs, s=200, color=(0.5,0,1,1/len(xs)-(time-timing[0])/time_delay_out))
+#    else:
+#        continue
 
     plt.savefig('bloch.tiff')
-    #     A = plot_bloch_multivector(statevector)
-    #     A.savefig('bloch.png')
     surf = pygame.image.load("bloch.tiff")
     screen.blit(surf,(0,0))
 
