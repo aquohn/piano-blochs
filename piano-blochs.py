@@ -64,7 +64,6 @@ time0 = int(pygame.time.get_ticks())
 
 #Song stuff:
 note_time_arr = np.floor(((np.array(range(70)) + 1) * EASY/BPM * 60 + 2) * 1000)
-checklist=np.zeros(len(note_time_arr))
 
 # Generate note distribution for each note
 point_idxs = np.random.randint(0,6,len(note_time_arr))
@@ -150,50 +149,6 @@ while running:
                     sv_arr[int(key)] = 1
                     sv_arr[1-int(key)] = 0
                 hit = 1
-
-                # Check if statevector coincides with point here
-
-                # OSU!!!
-                hit = 0 #check if there is a valid hit (no double counting)
-                for i in range(len(note_time_arr)): #find the closest beat note_time_arr[i] that is after current time, and the associated time diff
-                    if note_time_arr[i] > time: #check that the note is later than current time
-                        if note_time_arr[i] - time > time - note_time_arr[i-1]:
-                            time_diff = time - note_time_arr[i-1] #late for the i-1 the note
-                            if checklist[i-1] == 1: #check if note is already played
-                                break
-                            else:
-                                checklist[i-1] = 1
-                                hit = 1
-                        else:
-                            time_diff = note_time_arr[i] - time #early for the ith note
-                            if checklist[i] == 1: #check if note is already played
-                                break
-                            else:
-                                checklist[i] = 1
-                                hit = 1
-                    elif note_time_arr[i] == note_time_arr[-1]: #accounting for last note
-                        time_diff = time - note_time_arr[i] #late for the last note
-                        if checklist[i] == 1: #check if note is already played
-                            break
-                        else:
-                            checklist[i] = 1
-                            hit = 1
-                            
-                if hit == 1:
-                    #measure state, return probability of getting point? +z? as probability
-                    if abs(time_diff) > 1000: #if note_time_arr is early
-                        combo = 0
-                        combotext = "MISS!"
-                    elif int(key)==1:  # (1/(1+time_diff) * probability)<0.5:
-                        combo = 0
-                        combotext = "MISS!"
-                    else:
-                        combo += 1
-                        score += 1/(1+time_diff)*SCORE_PER_NOTE
-                        combotext = str(combo)
-                else:
-                    combo = 0
-                    combotext = "MISS!"
         elif event.type == QUIT:
             running = False
             
