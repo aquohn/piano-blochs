@@ -13,7 +13,6 @@ from qiskit.quantum_info.states import Statevector
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import numpy as np
-from itertools import product, combinations
 from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.mplot3d import proj3d
 from numpy import pi
@@ -182,32 +181,31 @@ while running:
                 note_cnt += 1
         if measured == 1:
             #measured = 0
-            print("measurement!")
-            print(note_time_arr[note_cnt])
-            print("sv_arr is " + str(sv_arr))
-            print("Target z is " + str(john))
-            print(time)
+            #print("measurement!")
+            #print(note_time_arr[note_cnt])
+            #print("sv_arr is " + str(sv_arr))
+            #print("Target z is " + str(john))
+            #print(time)
             
-            if valid_hit:
-                print("Valid hit!")
+            #if valid_hit:
+                #print("Valid hit!")
             if time < note_time_arr[note_cnt] - 1000:
-                print("Too early!")
+                #print("Too early!")
                 combotext = "TOO EARLY!"
-                continue
             elif abs(time - note_time_arr[note_cnt]) < 500 and valid_hit:
                 combo += 1
                 combotext = "PERFECT!"
-                print("perfect!")
+                #print("perfect!")
                 score += 1/(1+abs(time-note_time_arr[note_cnt]))*SCORE_PER_NOTE
                 note_cnt += 1
             elif abs(time - note_time_arr[note_cnt]) < 1000:
                 if valid_hit:
                     combo += 1
                     combotext = "GREAT!"
-                    print("great!")
+                    #print("great!")
                     score += 1/(1+abs(time-note_time_arr[note_cnt]))*SCORE_PER_NOTE
                 else:
-                    print("wrong side!")
+                    #print("wrong side!")
                     combo = 0
                     combotext = "MISS!"
                 note_cnt += 1
@@ -340,6 +338,8 @@ while running:
                 z = zarr[idx] / AXIS_SCALE
                          
             #TODO: fix the case where more than one note is present
+            #TODO: fix the case where "too early" is reported on the wrong side, even though we missed the thing alrieady (because we hit the passed note while it's fading out)
+            
             
             if note_time_arr[i] - time < time_delay and time < note_time_arr[i]: #fade in
 #             plot point list[i] on bloch sphere with opacity = 1- (note_time_arr[i]-time)/time delay
