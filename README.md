@@ -33,4 +33,10 @@ The objective of the game is to produce, via measurement, a particular quantum s
 
 # For Developers
 
-The game code has not been refactored and may be difficult to work with, and further development is currently (as 0f 14/10/2019) not a very high priority for the team. If you wish to work with Piano Blochs, contact project maintainer @aquohn (preferably via [email](mailto:john_khoo@u.nus.edu)) with any queries or to propose any arrangements.
+The game code has not been refactored and may be difficult to work with, and further development is currently (as 0f 14/10/2019) not a very high priority for the team. If you wish to work with Piano Blochs, contact project maintainer [@aquohn](https://github.com/aquohn) (preferably via [email](mailto:john_khoo@u.nus.edu)) with any queries or to propose any arrangements.
+
+# Credits
+
+This game was created at [Qiskit Hackathon 2019](https://github.com/qiskit-community/qiskit-hackathon-singapore-19) in Singapore. Special thanks to [@HuangJunye](https://github.com/HuangJunye) and [Naoki Kanazawa](https://researcher.watson.ibm.com/researcher/view.php?person=jp-KNZWNAO) for their invaluable mentorship!
+
+The song featured is _Kalimba_ by Mr. Scruff - a copy of which you may be able to find in the Music folder of any Windows 7 computer. The song is from his album [Ninja Tuna](https://open.spotify.com/album/0m1RgvoI6QyGACkazXV5Th).
