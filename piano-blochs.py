@@ -22,8 +22,8 @@ B_FIELD = 0.01
 EASY = 10
 BPM = 119
 B_FIELD = 0.03
-SCREEN_WIDTH=700
-SCREEN_HEIGHT=650
+SCREEN_WIDTH=1000
+SCREEN_HEIGHT=1000
 AXIS_SCALE = 1.8
 X_COLOR = "green"
 Y_COLOR = "orange"
@@ -52,7 +52,7 @@ sv_arr = np.array([1,0])
 z1 = [0,1]
 circuit = QuantumCircuit(1,1) #1 qubit and 1 classical bit
 simulator = Aer.get_backend('statevector_simulator')
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.display.set_mode((SCREEN_HEIGHT,SCREEN_WIDTH))
 
 running = True
 
@@ -117,11 +117,15 @@ while (end_it==False):
             end_it=True
     screen.blit(nlabel,(150,200))
     pygame.display.flip()
+
+# Start game itself
     
 time0 = int(pygame.time.get_ticks())
 pygame.mixer.music.play(0) #i think 0 = play 1 time, 1 is for 2 times, -1 is for infinite
 persistence = 1
 john=0  
+#screen = pygame.display.set_mode((SCREEN_HEIGHT,SCREEN_WIDTH))
+
 while running:
     
     if persistence == 1:
@@ -158,7 +162,6 @@ while running:
                     result = execute(circuit,backend=backend,shots = 1).result()
                     counts = result.get_counts()
                     for key in counts:
-                        print(int(key))
                         if int(key) == 0:
                             sv_arr[0] = 1
                             sv_arr[1] = 0
@@ -176,7 +179,7 @@ while running:
         if measured == 0 :
             if time >= note_time_arr[note_cnt] + 1000:
                 combo = 0
-                print("miss!")
+                #print("miss!")
                 combotext = "MISS!"
                 note_cnt += 1
         if measured == 1:
