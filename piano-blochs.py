@@ -77,7 +77,7 @@ score = 0
 # Getting the wav
 song = pygame.mixer.Sound("kalimba.wav") #use wav is best apparently
 
-pygame.mixer.music.load('testes.wav')
+pygame.mixer.music.load('kalimba.wav')
 
 
 MAXSCORE = 1000000

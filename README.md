@@ -18,14 +18,14 @@ If you have no idea what an interpreter or `pip` is, start [here](https://packag
 
 # Instructions
 
-The objective of the game is to produce, via measurement, a particular quantum state relative to some initial state. The axes on the Bloch sphere represent the coordinate system with respect to this initial state. and for simplicity will be referred to as x', y' and z'. x, y, z will represent the directions on the screen itself, serving as a sort of lab frame.
+The objective of the game is to produce, via measurement, a particular quantum state relative to some initial state. The axes on the Bloch sphere represent the coordinate system with respect to this initial state. and for simplicity will be referred to as `x'`, `y'` and `z'`. `x`, `y`, `z` will represent the directions on the screen itself, serving as a sort of lab frame. Initially, `x' = x`, `y' = y`, and `z' = 'z`. Applying the gates to the system will rotate the `x'y'z'` axes along the `xyz` axes, moving the state vector and the target points.
 
-`a` - apply the Rx ???
-`s` - 
-`d` - 
-`<Enter>` - take the measurement and check if the state collapsed into the desired state.
-`f` - quit the game
-  <Esc>` - exit the game and close the game window 
+`a` - apply the Rx gate to the system, rotating it 90 degrees clockwise along the x-axis.
+`s` - apply the Ry gate to the system, rotating it 90 degrees clockwise along the y-axis.
+`d` - apply the Rz gate to the system, rotating it 90 degrees clockwise along the z-axis.
+`<Enter>` - take a measurement and check if the state collapsed into the desired state.
+`f` - quit the game; at the game over screen, press `<Esc>` to exit, and press any other key to restart.
+`<Esc>` - exit the game and close the game window 
 
 # For Developers
 
