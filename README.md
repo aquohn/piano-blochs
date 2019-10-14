@@ -29,4 +29,4 @@ The objective of the game is to produce, via measurement, a particular quantum s
 
 # For Developers
 
-The game code has not been refactored and may be difficult to work with, and further development is currently (as 0f 14/10/2019) not a very high priority for the team. If you wish to work with Piano Blochs, contact project maintainer @aquohn (preferably via [email](mailto:john_khoo@u.nus.edu) with any queries or to propose any arrangements.
+The game code has not been refactored and may be difficult to work with, and further development is currently (as 0f 14/10/2019) not a very high priority for the team. If you wish to work with Piano Blochs, contact project maintainer @aquohn (preferably via [email](mailto:john_khoo@u.nus.edu)) with any queries or to propose any arrangements.
