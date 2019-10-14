@@ -10,9 +10,11 @@ If you have no idea what `clone` means, start [here](https://help.github.com/en/
 
 ## System Requirements
 
-The Python interpreter used to run Piano Blochs must have the following modules installed:
-- `matplotlib`, available from `pip`
-- `qiskit`, available from `pip`
+The Python interpreter used to run Piano Blochs must have the following modules installed, all available from `pip`:
+- `matplotlib`
+- `qiskit`
+- `numpy`
+- `pygame`
 
 If you have no idea what an interpreter or `pip` is, start [here](https://packaging.python.org/tutorials/installing-packages/).
 
